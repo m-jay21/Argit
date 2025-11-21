@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Argit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              // Cozy Linux Color Palette from template
+              'bg-primary': '#f4f0ea',
+              'bg-secondary': '#fbf8f4',
+              'bg-accent': '#ebe4db',
+              'text-primary': '#4a453e',
+              'text-secondary': '#6b645c',
+              'text-tertiary': '#5a544c',
+              'accent-primary': '#c8a882',
+              'accent-secondary': '#d4b896',
+              'button-primary': '#a89074',
+              'button-hover': '#967d65',
+              'success-color': '#6b8e3d',
+              'error-color': '#c65d57',
+              'border-color': '#e8e1d8',
+              'border-light': '#ede6dd',
+              'border-input': '#d9cfc4',
+              'shadow-light': 'rgba(0,0,0,0.08)',
+              'shadow-accent': 'rgba(200,168,130,0.3)'
+            },
+            fontFamily: {
+              'sans': ['Inter', 'SF Pro Display', '-apple-system', 'sans-serif'],
+              'mono': ['SF Mono', 'Monaco', 'monospace']
+            },
+            boxShadow: {
+              'cozy': '0 4px 20px rgba(0,0,0,0.08)',
+              'cozy-accent': '0 2px 8px rgba(200,168,130,0.3)'
+            }
+          }
+        }
+      }
+    </script>
+  </head>
+  <body class="h-screen m-0 p-0 overflow-hidden">
+    <div id="root" class="h-full"></div>
+    <script type="module" src="/main.jsx"></script>
+  </body>
+</html>

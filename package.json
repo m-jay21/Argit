@@ -1,0 +1,107 @@
+{
+  "name": "argit",
+  "version": "1.2.2",
+  "description": "Argit - A desktop personal finance tracking application for Linux",
+  "main": "src/main/main.js",
+  "homepage": "./",
+  "scripts": {
+    "start": "concurrently \"npm run dev:renderer\" \"wait-on http://localhost:3000 && npm run dev:electron\"",
+    "dev:renderer": "vite",
+    "dev:electron": "electron .",
+    "build": "vite build && electron-builder",
+    "build:renderer": "vite build",
+    "dist": "npm run build:renderer && electron-builder",
+    "dist:linux": "npm run build:renderer && electron-builder --linux",
+    "dist:win": "npm run build:renderer && electron-builder --win",
+    "dist:mac": "npm run build:renderer && electron-builder --mac",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "keywords": ["argit", "finance", "money", "tracker", "electron", "desktop"],
+  "author": "User",
+  "license": "MIT",
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
+    "concurrently": "^8.2.0",
+    "electron": "^26.0.0",
+    "electron-builder": "^24.6.3",
+    "vite": "^4.4.0",
+    "wait-on": "^7.0.1"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "lucide-react": "^0.279.0"
+  },
+  "build": {
+    "appId": "com.user.argit",
+    "productName": "Argit",
+    "directories": {
+      "output": "dist"
+    },
+    "icon": "assets/icon.png",
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        }
+      ],
+      "category": "Office",
+      "synopsis": "Argit - Personal finance tracking application for Linux",
+      "description": "Argit - A desktop personal finance tracking application for Linux",
+      "vendor": "Argit",
+      "maintainer": "User <user@example.com>",
+      "desktop": {
+        "Name": "Argit",
+        "Comment": "Argit - Track your personal finances",
+        "Keywords": "finance;money;budget;tracking;expenses;income;subscription;",
+        "Icon": "argit",
+        "StartupWMClass": "argit"
+      }
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/icon.png",
+      "publisherName": "Argit",
+      "verifyUpdateCodeSignature": false
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "icon": "assets/icon.png",
+      "category": "public.app-category.finance",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": null,
+      "entitlementsInherit": null
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "files": [
+      "dist/**/*",
+      "src/main/**/*",
+      "assets/**/*"
+    ]
+  }
+}

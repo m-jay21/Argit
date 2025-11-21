@@ -1,0 +1,20 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="backgroundGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#a89074"/>
+      <stop offset="100%" style="stop-color:#967d65"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background with rounded corners -->
+  <rect x="32" y="32" width="448" height="448" rx="80" fill="url(#backgroundGradient)"/>
+
+  <!-- Outer ring -->
+  <circle cx="256" cy="256" r="140" fill="none" stroke="#ffffff" stroke-width="16"/>
+
+  <!-- Middle ring -->
+  <circle cx="256" cy="256" r="84" fill="none" stroke="#ffffff" stroke-width="16"/>
+
+  <!-- Center dot -->
+  <circle cx="256" cy="256" r="28" fill="#ffffff"/>
+</svg>

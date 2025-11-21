@@ -1,0 +1,451 @@
+# Argit - The Argit Electron App - Complete Development Specification
+
+## Project Overview
+A desktop personal finance tracking application built with Electron for Linux (EndeavourOS) that provides simple, automatic money management with real-time balance updates and intelligent subscription tracking.
+
+## Core Requirements
+
+### Primary Functionality
+1. **Transaction Management**
+   - Add income transactions with automatic balance increase (+)
+   - Add expense transactions with automatic balance decrease (-)
+   - Real-time balance calculation and display
+   - Transaction history with date stamps
+   - Ability to remove/delete transactions with automatic balance adjustment
+
+2. **Balance Tracking**
+   - Prominent display of current account balance
+   - Automatic updates when transactions are added/removed
+   - Visual indicators for positive/negative balance states
+   - Balance persistence between app sessions
+
+3. **Subscription Management**
+   - Add recurring subscriptions with name, amount, and bill date
+   - Smart bill date calculation (next upcoming date logic)
+   - If today's date < bill date → next bill is this month
+   - If today's date >= bill date → next bill is next month
+   - Display total monthly subscription costs
+   - Remove/edit subscriptions
+
+4. **Monthly Focus**
+   - Display current month and year prominently
+   - Filter transactions to current month only
+   - Monthly income/expense summaries
+   - Reset or archive data monthly (optional feature)
+
+## Technical Architecture
+
+### Framework Stack
+- **Frontend**: React 18+ with modern hooks (useState, useEffect)
+- **Desktop Framework**: Electron (latest stable version)
+- **Styling**: Tailwind CSS for responsive design
+- **Icons**: Lucide React icon library
+- **Data Persistence**: Local JSON file storage or SQLite database
+- **Build Tools**: Electron Builder for packaging
+
+### Project Structure
+```
+argit/
+├── src/
+│   ├── main/
+│   │   ├── main.js                 # Electron main process
+│   │   ├── preload.js              # Preload script for security
+│   │   └── menu.js                 # Application menu setup
+│   ├── renderer/
+│   │   ├── components/
+│   │   │   ├── TransactionForm.jsx
+│   │   │   ├── TransactionList.jsx
+│   │   │   ├── SubscriptionForm.jsx
+│   │   │   ├── SubscriptionList.jsx
+│   │   │   ├── BalanceDisplay.jsx
+│   │   │   └── MonthlyStats.jsx
+│   │   ├── hooks/
+│   │   │   ├── useTransactions.js
+│   │   │   ├── useSubscriptions.js
+│   │   │   └── useTheme.js
+│   │   ├── utils/
+│   │   │   ├── dateHelpers.js
+│   │   │   ├── calculations.js
+│   │   │   └── storage.js
+│   │   ├── App.jsx                 # Main React application
+│   │   └── index.js                # React entry point
+├── assets/
+│   ├── icons/
+│   │   ├── icon.png                # App icon (256x256)
+│   │   ├── icon.ico                # Windows icon
+│   │   └── icon.icns               # macOS icon
+├── dist/                           # Built files
+├── package.json
+├── electron-builder.json
+└── README.md
+```
+
+## Detailed Feature Specifications
+
+### 1. Transaction System
+**Input Fields:**
+- Transaction type: Dropdown (Income/Expense)
+- Amount: Number input (decimal precision to 2 places)
+- Description: Text input (required, max 100 characters)
+- Date: Auto-filled with current date, editable
+
+**Validation:**
+- Amount must be positive number > 0
+- Description cannot be empty
+- Date must be valid format
+
+**Display:**
+- Reverse chronological order (newest first)
+- Color coding: Green for income (+), Red for expenses (-)
+- Show date, description, and amount
+- Delete button for each transaction
+- Scrollable list with max height
+
+### 2. Balance Management
+**Display Requirements:**
+- Large, prominent number display
+- Currency formatting ($X,XXX.XX)
+- Color coding: Green for positive, Red for negative, Yellow for zero
+- Smooth transitions when balance updates
+- Backup/restore balance feature
+
+**Calculation Logic:**
+- Starting balance (user settable, default 0)
+- Balance = Starting Balance + Total Income - Total Expenses
+- Real-time recalculation on any transaction change
+- Persistence across app restarts
+
+### 3. Subscription Intelligence
+**Smart Date Logic Implementation:**
+```javascript
+function getNextBillDate(billDay) {
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+  const todayDate = today.getDate();
+  
+  let nextBillDate;
+  
+  if (todayDate < billDay) {
+    // Bill hasn't occurred this month
+    nextBillDate = new Date(currentYear, currentMonth, billDay);
+  } else {
+    // Bill has passed, next one is next month
+    nextBillDate = new Date(currentYear, currentMonth + 1, billDay);
+  }
+  
+  return nextBillDate;
+}
+```
+
+**Display Features:**
+- Subscription name and monthly cost
+- Next bill date prominently displayed
+- Days until next bill (optional)
+- Total monthly subscription cost summary
+- Sort by next bill date or alphabetically
+
+### 4. Monthly Statistics Dashboard
+**Key Metrics:**
+- Total monthly income
+- Total monthly expenses
+- Net income (income - expenses)
+- Subscription costs
+- Average transaction size
+- Transaction count
+
+**Visual Elements:**
+- Card-based layout
+- Color-coded metrics
+- Progress bars or simple charts (optional)
+- Month navigation (current month focus)
+
+## Data Storage Schema
+
+### Transaction Object
+```javascript
+{
+  id: "unique_id_timestamp",
+  type: "income" | "expense",
+  amount: 123.45,
+  description: "Transaction description",
+  date: "2025-09-18",
+  timestamp: 1726661234567,
+  category: "optional_category"
+}
+```
+
+### Subscription Object
+```javascript
+{
+  id: "unique_id_timestamp",
+  name: "Netflix",
+  amount: 15.99,
+  billDate: 15,           // Day of month (1-31)
+  nextBillDate: "2025-10-15",
+  isActive: true,
+  category: "entertainment"
+}
+```
+
+### App Settings Object
+```javascript
+{
+  startingBalance: 0,
+  currency: "USD",
+  theme: "system" | "light" | "dark",
+  monthlyBudget: 0,       // Optional
+  dataBackupPath: "/path/to/backup",
+  lastUpdated: "2025-09-18"
+}
+```
+
+## Native Theme Integration (Optional Feature)
+
+### System Theme Detection
+**Requirements:**
+- Detect Linux desktop environment theme (GNOME, KDE, XFCE)
+- Support both light and dark themes
+- Real-time theme switching when system changes
+- Fallback to manual theme selection
+
+**Implementation Approach:**
+```javascript
+// In main process (main.js)
+const { nativeTheme } = require('electron');
+
+function getCurrentSystemTheme() {
+  return nativeTheme.shouldUseDarkColors ? 'dark' : 'light';
+}
+
+// Watch for theme changes
+nativeTheme.on('updated', () => {
+  const theme = getCurrentSystemTheme();
+  // Send theme update to renderer process
+  mainWindow.webContents.send('theme-changed', theme);
+});
+```
+
+**Theme Variables:**
+```css
+/* CSS Custom Properties for theming */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --text-primary: #1a1a1a;
+  --text-secondary: #6b7280;
+  --border-color: #e5e7eb;
+  --accent-primary: #3b82f6;
+  --success-color: #10b981;
+  --error-color: #ef4444;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  --border-color: #404040;
+  --accent-primary: #60a5fa;
+  --success-color: #34d399;
+  --error-color: #f87171;
+}
+```
+
+### Desktop Environment Integration
+**Linux-specific features:**
+- Read GTK theme settings from `~/.config/gtk-3.0/settings.ini`
+- Monitor `dconf` changes for GNOME theme updates
+- Support KDE Plasma color schemes
+- Respect system accent colors where available
+
+## User Interface Design
+
+### Layout Structure
+```
+┌─────────────────────────────────────────────────────┐
+│ Menu Bar (File, Edit, View, Help)                   │
+├─────────────────────────────────────────────────────┤
+│ Header: Argit | September 2025              │
+├─────────────────────────────────────────────────────┤
+│ ┌─────────────────┐ ┌─────────────────────────────┐ │
+│ │   Balance       │ │   Monthly Stats             │ │
+│ │   $1,234.56     │ │   Income: $2000             │ │
+│ │                 │ │   Expenses: $765.44         │ │
+│ │                 │ │   Subscriptions: $89.99     │ │
+│ └─────────────────┘ └─────────────────────────────┘ │
+├─────────────────────────────────────────────────────┤
+│ ┌─────────────────┐ ┌─────────────────────────────┐ │
+│ │ Add Transaction │ │ Add Subscription            │ │
+│ │ [Type] [Amount] │ │ [Name] [Amount] [Day]       │ │
+│ │ [Description]   │ │ [Add Button]                │ │
+│ │ [Add Button]    │ │                             │ │
+│ └─────────────────┘ └─────────────────────────────┘ │
+├─────────────────────────────────────────────────────┤
+│ ┌─────────────────┐ ┌─────────────────────────────┐ │
+│ │ Transactions    │ │ Subscriptions               │ │
+│ │ [List of items] │ │ [List with next bill dates] │ │
+│ │ [Scrollable]    │ │ [Scrollable]                │ │
+│ └─────────────────┘ └─────────────────────────────┘ │
+└─────────────────────────────────────────────────────┘
+```
+
+### Design Principles
+- **Cozy Aesthetic**: Warm, welcoming interface inspired by Linux dotfiles/rice community
+- **Simplicity**: Clean, uncluttered interface with soft rounded edges
+- **Clarity**: Clear visual hierarchy with Font Awesome icons and modern typography
+- **Efficiency**: Minimal clicks to perform actions
+- **Feedback**: Immediate visual feedback for all actions
+- **Accessibility**: Good contrast with warm, readable colors
+
+## Linux Desktop Integration
+
+### Application Menu Entry
+**Desktop File** (`~/.local/share/applications/argit.desktop`):
+```ini
+[Desktop Entry]
+Name=Argit
+Comment=Personal finance tracking application
+Exec=/opt/Argit/argit
+Icon=argit
+Type=Application
+Categories=Office;Finance;
+StartupWMClass=Argit
+StartupNotify=true
+```
+
+### System Integration Features
+- **File associations**: Optional .mmf (Argit File) support
+- **System tray**: Minimize to system tray option
+- **Notifications**: Bill reminders and low balance alerts
+- **Keyboard shortcuts**: Global shortcuts for quick entry
+- **Window management**: Remember window size and position
+
+### Package Distribution
+**Electron Builder Configuration:**
+```json
+{
+  "build": {
+    "appId": "com.user.moneymanager",
+    "productName": "Argit",
+    "directories": {
+      "output": "dist"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        },
+        {
+          "target": "deb",
+          "arch": ["x64"]
+        },
+        {
+          "target": "rpm",
+          "arch": ["x64"]
+        }
+      ],
+      "category": "Office",
+      "icon": "./assets/icons/",
+      "synopsis": "Personal finance tracker"
+    }
+  }
+}
+```
+
+## Error Handling & Data Validation
+
+### Input Validation
+- Sanitize all user inputs
+- Validate number formats and ranges
+- Check date validity
+- Prevent XSS and injection attacks
+
+### Error States
+- Network connectivity issues
+- File system permission errors
+- Data corruption recovery
+- Invalid data format handling
+- Graceful degradation
+
+### User Feedback
+- Loading states for all operations
+- Success/error toast notifications
+- Form validation messages
+- Confirmation dialogs for destructive actions
+
+## Performance Requirements
+
+### Startup Performance
+- App launch time: < 3 seconds
+- Initial render: < 1 second
+- Data loading: < 500ms for local data
+
+### Runtime Performance
+- UI response time: < 100ms for all interactions
+- Memory usage: < 200MB typical
+- CPU usage: Minimal when idle
+- Efficient re-rendering with React optimization
+
+### Data Limits
+- Support up to 10,000 transactions
+- 500 active subscriptions
+- 5 years of historical data
+- Graceful handling of large datasets
+
+## Security Considerations
+
+### Data Protection
+- Local data encryption (optional)
+- Secure file permissions
+- Input sanitization
+- No network data transmission by default
+
+### Electron Security
+- Context isolation enabled
+- Node integration disabled in renderer
+- Content Security Policy implementation
+- Secure preload script design
+
+## Testing Strategy
+
+### Unit Tests
+- Transaction calculation logic
+- Date manipulation functions
+- Data validation functions
+- Storage operations
+
+### Integration Tests
+- Electron main/renderer communication
+- File system operations
+- Theme switching functionality
+- Complete user workflows
+
+### User Acceptance Testing
+- Installation process on EndeavourOS
+- Basic functionality verification
+- Theme integration testing
+- Performance benchmarking
+
+## Success Criteria
+
+### Functional Requirements Met
+- All core features working correctly
+- Data persistence across sessions
+- Accurate balance calculations
+- Smart subscription date handling
+
+### Technical Requirements Met
+- Runs natively on EndeavourOS
+- Integrates with application menu
+- Optional theme matching works
+- Package builds successfully
+
+### User Experience Goals
+- Intuitive and easy to use
+- Fast and responsive
+- Visually appealing
+- Reliable and stable
+
+This specification provides a comprehensive blueprint for developing the Argit Electron application with all requested features, Linux integration, and optional native theme support.
