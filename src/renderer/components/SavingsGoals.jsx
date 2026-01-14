@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Target, Plus, Edit3, CheckCircle, Trash2, DollarSign, Percent, Shuffle } from 'lucide-react';
+import { AvailableForGoalsIcon, PlusIcon, EditIcon, MarkCompleteIcon, DeleteIcon, DollarSignIcon, PercentIcon, ShuffleIcon, TargetIcon } from './icons';
 import { calculateGoalProgress, getNextGoalId, calculateSurplusDistribution } from '../utils/budgetHelpers';
 import { getAvailableSavingsFromPot } from '../utils/monthEndProcessing';
 
@@ -255,19 +255,19 @@ function SavingsGoals({
     switch (goal.contributionType) {
       case 'fixed':
         return {
-          icon: <DollarSign className="w-4 h-4" />,
+          icon: <DollarSignIcon className="w-4 h-4" />,
           text: `Fixed: ${formatCurrency(goal.monthlyContribution)}/month`,
           amount: goal.monthlyContribution
         };
       case 'percentage':
         return {
-          icon: <Percent className="w-4 h-4" />,
+          icon: <PercentIcon className="w-4 h-4" />,
           text: `Percentage: ${goal.percentageContribution}%`,
           amount: (availableForSavings * goal.percentageContribution) / 100
         };
       case 'flexible':
         return {
-          icon: <Shuffle className="w-4 h-4" />,
+          icon: <ShuffleIcon className="w-4 h-4" />,
           text: 'Gets remaining funds automatically',
           amount: 0 // Calculated at distribution time
         };
@@ -292,7 +292,7 @@ function SavingsGoals({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-success-color rounded-lg flex items-center justify-center">
-              <Target className="w-5 h-5 text-white" />
+              <AvailableForGoalsIcon className="w-5 h-5 text-white" />
             </div>
             <div>
               <p className="text-sm text-text-secondary">Available for Goals</p>
@@ -310,7 +310,7 @@ function SavingsGoals({
             onClick={() => setShowAddGoal(true)}
             className="flex items-center gap-2 px-4 py-2 bg-accent-primary text-white rounded-lg text-sm font-medium hover:bg-opacity-90 transition-colors"
           >
-            <Plus className="w-4 h-4" />
+            <PlusIcon className="w-4 h-4" />
             Add New Goal
           </button>
         </div>
@@ -486,21 +486,21 @@ function SavingsGoals({
                     className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
                     title="Edit Goal"
                   >
-                    <Edit3 className="w-4 h-4" />
+                    <EditIcon className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleMarkComplete(goal.id)}
                     className="p-2 text-green-600 hover:bg-green-50 rounded-lg"
                     title="Mark Complete"
                   >
-                    <CheckCircle className="w-4 h-4" />
+                    <MarkCompleteIcon className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDeleteGoal(goal.id)}
                     className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
                     title="Delete Goal"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <DeleteIcon className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -535,7 +535,7 @@ function SavingsGoals({
 
         {savingsGoals.filter(goal => goal.isActive).length === 0 && (
           <div className="text-center py-8 text-text-secondary">
-            <Target className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <TargetIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
             <p className="text-lg font-medium mb-2">No savings goals yet</p>
             <p className="text-sm">Create your first savings goal to start tracking progress!</p>
           </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { ErrorIcon, LoadingSpinnerIcon } from './icons';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -33,7 +33,7 @@ class ErrorBoundary extends React.Component {
         <div className="min-h-screen bg-bg-primary p-5 flex items-center justify-center">
           <div className="max-w-md mx-auto bg-bg-secondary border border-border-light p-6 rounded-lg text-center">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertTriangle className="w-8 h-8 text-red-600" />
+              <ErrorIcon className="w-8 h-8 text-red-600" />
             </div>
 
             <h2 className="text-xl font-semibold text-text-primary mb-2">
@@ -49,7 +49,7 @@ class ErrorBoundary extends React.Component {
                 onClick={this.handleReload}
                 className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-accent-primary text-white rounded-lg hover:bg-opacity-90 transition-colors"
               >
-                <RefreshCw className="w-4 h-4" />
+                <LoadingSpinnerIcon className="w-4 h-4" />
                 Try Again
               </button>
 

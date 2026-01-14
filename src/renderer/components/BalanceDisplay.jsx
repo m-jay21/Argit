@@ -1,5 +1,5 @@
 import React from 'react';
-import { Banknote, TrendingUp, TrendingDown } from 'lucide-react';
+import { BalanceDisplayIcon, TrendingUpIcon, TrendingDownIcon, BanknoteIcon } from './icons';
 
 function BalanceDisplay({ balance, currency = 'AED' }) {
   const formatCurrency = (amount) => {
@@ -17,14 +17,14 @@ function BalanceDisplay({ balance, currency = 'AED' }) {
   };
 
   const getBalanceIcon = () => {
-    if (balance > 0) return <TrendingUp className="h-8 w-8" />;
-    if (balance < 0) return <TrendingDown className="h-8 w-8" />;
-    return <Banknote className="h-8 w-8" />;
+    if (balance > 0) return <TrendingUpIcon className="h-8 w-8" />;
+    if (balance < 0) return <TrendingDownIcon className="h-8 w-8" />;
+    return <BanknoteIcon className="h-8 w-8" />;
   };
 
   return (
     <div className="bg-accent-primary text-white p-4 rounded-lg text-2xl font-semibold my-4 shadow-cozy-accent flex items-center">
-      <Banknote className="w-6 h-6 mr-3" />
+      <BalanceDisplayIcon className="w-6 h-6 mr-3" />
       {formatCurrency(balance)}
     </div>
   );

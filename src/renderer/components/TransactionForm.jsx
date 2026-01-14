@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, TrendingUp, TrendingDown, Wallet } from 'lucide-react';
+import { AddExpenseIcon, SavingsPotIcon, FromSavingsIcon } from './icons';
 
 function TransactionForm({ onAddTransaction, availableCategories = [], settings = {}, onUpdateSettings }) {
   const [formData, setFormData] = useState({
@@ -101,174 +101,95 @@ function TransactionForm({ onAddTransaction, availableCategories = [], settings 
       {/* Savings pot indicator */}
       {(settings.savingsPot || 0) > 0 && (
         <div className="text-xs text-teal-600 dark:text-teal-400 mb-2 flex items-center gap-1">
-          <Wallet className="w-3 h-3" />
+          <SavingsPotIcon className="w-3 h-3" />
           Savings pot: {(settings.savingsPot || 0).toFixed(2)} AED available
         </div>
       )}
       
-      <div className="flex flex-col gap-2 my-1">
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              if (!formData.amount || !formData.description) return;
-              const amount = parseFloat(formData.amount);
-              if (amount <= 0) return;
+      <div className="flex gap-2 my-1">
+        <button
+          type="button"
+          onClick={() => {
+            if (!formData.amount || !formData.description) return;
+            const amount = parseFloat(formData.amount);
+            if (amount <= 0) return;
 
-              onAddTransaction({
-                ...formData,
-                type: 'income',
-                amount
-              });
+            onAddTransaction({
+              ...formData,
+              type: 'expense',
+              amount
+            });
 
-              setFormData({
-                type: 'expense',
-                amount: '',
-                description: '',
-                date: new Date().toISOString().split('T')[0],
-                category: availableCategories.length > 0 ? availableCategories[0].name : 'Savings'
-              });
-            }}
-            className="bg-success-color text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-opacity-90 transition-colors flex items-center justify-center gap-1 flex-1"
-          >
-            <TrendingUp className="w-4 h-4" />
-            Income
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              if (!formData.amount || !formData.description) return;
-              const amount = parseFloat(formData.amount);
-              if (amount <= 0) return;
+            setFormData({
+              type: 'expense',
+              amount: '',
+              description: '',
+              date: new Date().toISOString().split('T')[0],
+              category: availableCategories.length > 0 ? availableCategories[0].name : 'Savings'
+            });
+          }}
+          className="flex-1 bg-error-color text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-opacity-90 transition-colors flex items-center justify-center gap-1"
+        >
+          <AddExpenseIcon className="w-4 h-4" />
+          Add Expense
+        </button>
+        <button
+          type="button"
+          onClick={async () => {
+            if (!formData.amount || !formData.description) return;
+            const amount = parseFloat(formData.amount);
+            if (amount <= 0) return;
 
-              onAddTransaction({
-                ...formData,
-                type: 'expense',
-                amount
-              });
+            // Check if there's enough in savings pot
+            const availableSavings = settings.savingsPot || 0;
+            if (amount > availableSavings) {
+              alert(`Insufficient savings! You have ${availableSavings.toFixed(2)} AED in your savings pot, but trying to spend ${amount.toFixed(2)} AED.`);
+              return;
+            }
 
-              setFormData({
-                type: 'expense',
-                amount: '',
-                description: '',
-                date: new Date().toISOString().split('T')[0],
-                category: availableCategories.length > 0 ? availableCategories[0].name : 'Savings'
-              });
-            }}
-            className="bg-error-color text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-opacity-90 transition-colors flex items-center justify-center gap-1 flex-1"
-          >
-            <TrendingDown className="w-4 h-4" />
-            Expense
-          </button>
-        </div>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={async () => {
-              if (!formData.amount || !formData.description) return;
-              const amount = parseFloat(formData.amount);
-              if (amount <= 0) return;
-
-              // Deposit to savings pot - creates an expense transaction that reduces balance
-              // but increases savings pot
-              const transaction = {
-                type: 'expense',
-                description: formData.description || 'Deposit to Savings Pot',
-                date: formData.date || new Date().toISOString().split('T')[0],
-                category: 'Savings',
-                amount
-              };
-
-              try {
-                // Add the transaction first (this reduces your balance)
-                await onAddTransaction(transaction);
-                
-                // Then add to savings pot
-                if (onUpdateSettings) {
-                  const currentPot = settings.savingsPot || 0;
-                  const updatedSettings = {
-                    ...settings,
-                    savingsPot: currentPot + amount
-                  };
-                  await onUpdateSettings(updatedSettings);
-                }
-
-                // Reset form
-                setFormData({
-                  type: 'expense',
-                  amount: '',
-                  description: '',
-                  date: new Date().toISOString().split('T')[0],
-                  category: availableCategories.length > 0 ? availableCategories[0].name : 'Savings'
-                });
-              } catch (error) {
-                console.error('Failed to deposit to savings pot:', error);
-                alert('Failed to deposit to savings pot. Please try again.');
-              }
-            }}
-            className="bg-amber-600 text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-opacity-90 transition-colors flex items-center justify-center gap-1 flex-1"
-            title="Deposit to savings pot (reduces balance, adds to savings pot)"
-          >
-            <Wallet className="w-4 h-4" />
-            To Savings
-          </button>
-          <button
-            type="button"
-            onClick={async () => {
-              if (!formData.amount || !formData.description) return;
-              const amount = parseFloat(formData.amount);
-              if (amount <= 0) return;
-
-              // Check if there's enough in savings pot
-              const availableSavings = settings.savingsPot || 0;
-              if (amount > availableSavings) {
-                alert(`Insufficient savings! You have ${availableSavings.toFixed(2)} AED in your savings pot, but trying to spend ${amount.toFixed(2)} AED.`);
-                return;
-              }
-
+            try {
               // Create expense transaction using selected category (counts towards budget)
-              // Mark as fromSavings so it doesn't affect balance calculation
               const transaction = {
                 ...formData,
                 type: 'expense',
                 amount,
-                fromSavings: true // Flag to exclude from balance calculation
-                // Use selected category from formData, not hardcoded 'Savings'
+                description: formData.description || 'Spent from Savings',
+                date: formData.date || new Date().toISOString().split('T')[0],
+                category: formData.category || 'Savings'
               };
 
-              try {
-                // Add the transaction first and wait for it to complete
-                await onAddTransaction(transaction);
-                
-                // Then deduct from savings pot and wait for it to complete
-                if (onUpdateSettings) {
-                  const updatedSettings = {
-                    ...settings,
-                    savingsPot: availableSavings - amount
-                  };
-                  await onUpdateSettings(updatedSettings);
-                }
-
-                // Reset form
-                setFormData({
-                  type: 'expense',
-                  amount: '',
-                  description: '',
-                  date: new Date().toISOString().split('T')[0],
-                  category: availableCategories.length > 0 ? availableCategories[0].name : 'Savings'
-                });
-              } catch (error) {
-                console.error('Failed to process savings expense:', error);
-                alert('Failed to process savings expense. Please try again.');
+              // Add the transaction first
+              await onAddTransaction(transaction);
+              
+              // Then deduct from savings pot
+              if (onUpdateSettings) {
+                const currentPot = settings.savingsPot || 0;
+                const updatedSettings = {
+                  ...settings,
+                  savingsPot: currentPot - amount
+                };
+                await onUpdateSettings(updatedSettings);
               }
-            }}
-            className="bg-teal-600 text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-opacity-90 transition-colors flex items-center justify-center gap-1 flex-1"
-            title={`Spend from savings pot (${(settings.savingsPot || 0).toFixed(2)} AED available) - Uses selected category`}
-          >
-            <Wallet className="w-4 h-4" />
-            From Savings
-          </button>
-        </div>
+
+              // Reset form
+              setFormData({
+                type: 'expense',
+                amount: '',
+                description: '',
+                date: new Date().toISOString().split('T')[0],
+                category: availableCategories.length > 0 ? availableCategories[0].name : 'Savings'
+              });
+            } catch (error) {
+              console.error('Failed to spend from savings:', error);
+              alert('Failed to spend from savings. Please try again.');
+            }
+          }}
+          className="flex-1 bg-amber-600 text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-opacity-90 transition-colors flex items-center justify-center gap-1"
+          title={`Spend from savings pot (${(settings.savingsPot || 0).toFixed(2)} AED available) - Uses selected category`}
+        >
+          <FromSavingsIcon className="w-4 h-4" />
+          From Savings
+        </button>
       </div>
     </form>
   );

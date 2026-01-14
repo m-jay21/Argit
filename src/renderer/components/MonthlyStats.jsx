@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, TrendingDown, CreditCard, Banknote } from 'lucide-react';
+import { QuickOverviewIcon, TrendingUpIcon, TrendingDownIcon, SubscriptionsStatIcon, NetIncomeIcon } from './icons';
 
 function MonthlyStats({ transactions, subscriptions, currency = 'AED' }) {
   const formatCurrency = (amount) => {
@@ -36,28 +36,28 @@ function MonthlyStats({ transactions, subscriptions, currency = 'AED' }) {
     {
       label: 'Monthly Income',
       value: monthlyIncome,
-      icon: TrendingUp,
+      icon: TrendingUpIcon,
       color: 'text-green-600 dark:text-green-400',
       bgColor: 'bg-green-50 dark:bg-green-900/20'
     },
     {
       label: 'Monthly Expenses',
       value: monthlyExpenses,
-      icon: TrendingDown,
+      icon: TrendingDownIcon,
       color: 'text-red-600 dark:text-red-400',
       bgColor: 'bg-red-50 dark:bg-red-900/20'
     },
     {
       label: 'Net Income',
       value: netIncome,
-      icon: Banknote,
+      icon: NetIncomeIcon,
       color: netIncome >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400',
       bgColor: netIncome >= 0 ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'
     },
     {
       label: 'Subscriptions',
       value: totalSubscriptions,
-      icon: CreditCard,
+      icon: SubscriptionsStatIcon,
       color: 'text-purple-600 dark:text-purple-400',
       bgColor: 'bg-purple-50 dark:bg-purple-900/20'
     }
@@ -66,7 +66,7 @@ function MonthlyStats({ transactions, subscriptions, currency = 'AED' }) {
   return (
     <div className="bg-bg-secondary border border-border-light p-4 my-3 rounded-lg">
       <div className="flex items-center text-text-primary font-semibold mb-3">
-        <TrendingUp className="w-4 h-4 text-accent-primary mr-2" />
+        <QuickOverviewIcon className="w-4 h-4 text-accent-primary mr-2" />
         Quick Overview
       </div>
       <div className="flex flex-wrap gap-2">

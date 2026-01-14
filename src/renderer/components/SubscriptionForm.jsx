@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { PlusIcon } from './icons';
 import { getNextBillDate } from '../utils/dateHelpers';
 import { validateAmount, validateBillDate } from '../utils/calculations';
 
@@ -85,7 +85,7 @@ function SubscriptionForm({ onAddSubscription }) {
         type="submit"
         className="bg-button-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-button-hover transition-colors flex items-center gap-1"
       >
-        <Plus className="w-4 h-4" />
+        <PlusIcon className="w-4 h-4" />
         Add Subscription
       </button>
     </form>

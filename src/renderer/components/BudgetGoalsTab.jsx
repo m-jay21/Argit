@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Target, PieChart, Settings, Plus } from 'lucide-react';
+import { TargetIcon, ManageCategoriesIcon, SavingsGoalsTabIcon, TrendingUpIcon } from './icons';
 import BudgetAllocation from './BudgetAllocation';
 import CategoryManagement from './CategoryManagement';
 import SavingsGoals from './SavingsGoals';
@@ -33,7 +33,7 @@ function BudgetGoalsTab({
       <div className="space-y-5">
         <div className="bg-bg-secondary border border-border-light p-8 rounded-lg text-center">
           <div className="w-12 h-12 bg-accent-primary rounded-lg flex items-center justify-center mx-auto mb-4">
-            <Target className="w-6 h-6 text-white" />
+            <TargetIcon className="w-6 h-6 text-white" />
           </div>
           <h3 className="text-lg font-semibold text-text-primary mb-2">Setting up Budget & Goals</h3>
           <p className="text-text-secondary">Please wait while we initialize your budget configuration...</p>
@@ -55,7 +55,6 @@ function BudgetGoalsTab({
                 : 'text-text-primary hover:bg-bg-accent'
             }`}
           >
-            <PieChart className="w-4 h-4" />
             Budget Allocation
           </button>
           <button
@@ -66,7 +65,7 @@ function BudgetGoalsTab({
                 : 'text-text-primary hover:bg-bg-accent'
             }`}
           >
-            <Target className="w-4 h-4" />
+            <SavingsGoalsTabIcon className="w-4 h-4" />
             Savings Goals
           </button>
           <button
@@ -77,7 +76,7 @@ function BudgetGoalsTab({
                 : 'text-text-primary hover:bg-bg-accent'
             }`}
           >
-            <Settings className="w-4 h-4" />
+            <ManageCategoriesIcon className="w-4 h-4" />
             Manage Categories
           </button>
         </div>
@@ -88,7 +87,7 @@ function BudgetGoalsTab({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-accent-primary rounded-lg flex items-center justify-center">
-              <PieChart className="w-5 h-5 text-white" />
+              <TrendingUpIcon className="w-5 h-5 text-white" />
             </div>
             <div>
               <p className="text-sm text-text-secondary">This Month's Income</p>

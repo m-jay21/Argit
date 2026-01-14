@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trash2, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { DeleteIcon, ArrowUpCircleIcon, ArrowDownCircleIcon } from './icons';
 
 function TransactionList({ transactions, onRemoveTransaction, currency = 'AED' }) {
   const formatCurrency = (amount) => {
@@ -55,9 +55,9 @@ function TransactionList({ transactions, onRemoveTransaction, currency = 'AED' }
               transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
             }`}>
               {transaction.type === 'income' ? (
-                <ArrowUpCircle className="h-5 w-5" />
+                <ArrowUpCircleIcon className="h-5 w-5" />
               ) : (
-                <ArrowDownCircle className="h-5 w-5" />
+                <ArrowDownCircleIcon className="h-5 w-5" />
               )}
             </div>
 
@@ -91,7 +91,7 @@ function TransactionList({ transactions, onRemoveTransaction, currency = 'AED' }
             className="ml-3 p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
             title="Delete transaction"
           >
-            <Trash2 className="h-4 w-4" />
+            <DeleteIcon className="h-4 w-4" />
           </button>
         </div>
       ))}

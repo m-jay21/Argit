@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trash2, Calendar, Clock } from 'lucide-react';
+import { DeleteIcon, NextBillDateIcon, DaysUntilBillIcon } from './icons';
 import { getSubscriptionStatus } from '../utils/subscriptionHelpers';
 
 function SubscriptionList({ subscriptions, onRemoveSubscription, currency = 'AED' }) {
@@ -63,11 +63,11 @@ function SubscriptionList({ subscriptions, onRemoveSubscription, currency = 'AED
 
                 <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
                   <div className="flex items-center space-x-1">
-                    <Calendar className="h-3 w-3" />
+                    <NextBillDateIcon className="h-3 w-3" />
                     <span>Next: {formatDate(subscription.nextBillDate)}</span>
                   </div>
                   <div className="flex items-center space-x-1">
-                    <Clock className="h-3 w-3" />
+                    <DaysUntilBillIcon className="h-3 w-3" />
                     <span className={status.color}>
                       {status.text}
                     </span>
@@ -90,7 +90,7 @@ function SubscriptionList({ subscriptions, onRemoveSubscription, currency = 'AED
                   className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                   title="Delete subscription"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <DeleteIcon className="h-4 w-4" />
                 </button>
               </div>
             </div>

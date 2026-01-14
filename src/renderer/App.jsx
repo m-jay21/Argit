@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Banknote, Calendar, TrendingUp, TrendingDown, Loader2, CheckCircle, X, Target } from 'lucide-react';
+import { AddIncomeSectionIcon, AddExpenseSectionIcon, RecentActivityIcon, AddSubscriptionIcon, UpcomingBillsIcon, SubscriptionPaymentIcon, LoadingSpinnerIcon, XIcon, TrendingUpIcon } from './components/icons';
 import BalanceDisplay from './components/BalanceDisplay';
+import IncomeForm from './components/IncomeForm';
 import TransactionForm from './components/TransactionForm';
 import TransactionList from './components/TransactionList';
 import SubscriptionForm from './components/SubscriptionForm';
@@ -23,15 +24,14 @@ function App() {
   const { data, isLoading, updateTransactions, updateSubscriptions, updateBudgetConfig, updateSavingsGoals, updateSettings } = useLocalStorage();
   const { transactions, subscriptions, budgetConfig, savingsGoals, settings } = data;
 
-  // Calculate balance including starting balance
-  // Exclude transactions from savings pot (they don't affect balance, only savings pot)
+  // Calculate balance including starting balance and transfers from savings
   useEffect(() => {
     const totalIncome = transactions
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0);
 
     const totalExpenses = transactions
-      .filter(t => t.type === 'expense' && !t.fromSavings)
+      .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
 
     const newBalance = settings.startingBalance + totalIncome - totalExpenses;
@@ -173,7 +173,7 @@ function App() {
       <div className={`min-h-screen ${theme === 'dark' ? 'dark' : ''}`}>
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
           <div className="text-center">
-            <Loader2 className="h-12 w-12 animate-spin text-primary-600 dark:text-primary-400 mx-auto mb-4" />
+            <LoadingSpinnerIcon className="h-12 w-12 animate-spin text-primary-600 dark:text-primary-400 mx-auto mb-4" />
             <p className="text-lg font-medium text-gray-900 dark:text-white">Loading Argit...</p>
           </div>
         </div>
@@ -202,14 +202,14 @@ function App() {
           {showPaymentNotification && (
             <div className="bg-success-color text-white p-3 rounded-lg mb-4 flex items-center justify-between">
               <div className="flex items-center">
-                <CheckCircle className="w-4 h-4 mr-2" />
+                <SubscriptionPaymentIcon className="w-4 h-4 mr-2" />
                 <span className="text-sm font-medium">Subscription Payments Processed</span>
               </div>
               <button
                 onClick={() => setShowPaymentNotification(false)}
                 className="text-white hover:text-gray-200"
               >
-                <X className="w-4 h-4" />
+                <XIcon className="w-4 h-4" />
               </button>
             </div>
           )}
@@ -242,13 +242,12 @@ function App() {
               </button>
               <button
                 onClick={() => setActiveTab('budget')}
-                className={`px-4 py-3 text-sm font-medium rounded-tr-lg transition-colors flex items-center gap-2 ${
+                className={`px-4 py-3 text-sm font-medium rounded-tr-lg transition-colors ${
                   activeTab === 'budget'
                     ? 'bg-accent-primary text-white'
                     : 'text-text-primary hover:bg-bg-accent'
                 }`}
               >
-                <Target className="w-4 h-4" />
                 Budget & Goals
               </button>
             </div>
@@ -262,24 +261,40 @@ function App() {
 
               {/* Main Grid Layout */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 my-5">
-                {/* Add Transaction Section */}
-                <div className="bg-bg-secondary border border-border-light p-4 rounded-lg">
-                  <div className="flex items-center text-text-primary font-semibold mb-3">
-                    <Plus className="w-4 h-4 text-accent-primary mr-2" />
-                    Add Transaction
+                {/* Left Column - Income and Expense Forms */}
+                <div className="space-y-5">
+                  {/* Add Income Section */}
+                  <div className="bg-bg-secondary border border-border-light p-4 rounded-lg">
+                    <div className="flex items-center text-text-primary font-semibold mb-3">
+                      <AddIncomeSectionIcon className="w-4 h-4 text-accent-primary mr-2" />
+                      Add Income
+                    </div>
+                    <IncomeForm 
+                      onAddTransaction={addTransaction}
+                      settings={settings || {}}
+                      onUpdateSettings={updateSettings}
+                    />
                   </div>
-                  <TransactionForm
-                    onAddTransaction={addTransaction}
-                    availableCategories={budgetConfig?.categories || []}
-                    settings={settings || {}}
-                    onUpdateSettings={updateSettings}
-                  />
+
+                  {/* Add Expense Section */}
+                  <div className="bg-bg-secondary border border-border-light p-4 rounded-lg">
+                    <div className="flex items-center text-text-primary font-semibold mb-3">
+                      <AddExpenseSectionIcon className="w-4 h-4 text-accent-primary mr-2" />
+                      Add Expense
+                    </div>
+                    <TransactionForm
+                      onAddTransaction={addTransaction}
+                      availableCategories={budgetConfig?.categories || []}
+                      settings={settings || {}}
+                      onUpdateSettings={updateSettings}
+                    />
+                  </div>
                 </div>
 
-                {/* Recent Activity Section */}
+                {/* Right Column - Recent Activity */}
                 <div className="bg-bg-secondary border border-border-light p-4 rounded-lg">
                   <div className="flex items-center text-text-primary font-semibold mb-3">
-                    <TrendingUp className="w-4 h-4 text-accent-primary mr-2" />
+                    <RecentActivityIcon className="w-4 h-4 text-accent-primary mr-2" />
                     Recent Activity
                   </div>
                   <TransactionList
@@ -303,7 +318,7 @@ function App() {
                 {/* Add Subscription Section */}
                 <div className="bg-bg-secondary border border-border-light p-4 rounded-lg">
                   <div className="flex items-center text-text-primary font-semibold mb-3">
-                    <Plus className="w-4 h-4 text-accent-primary mr-2" />
+                    <AddSubscriptionIcon className="w-4 h-4 text-accent-primary mr-2" />
                     Add Subscription
                   </div>
                   <SubscriptionForm onAddSubscription={addSubscription} />
@@ -312,7 +327,7 @@ function App() {
                 {/* Upcoming Bills Section */}
                 <div className="bg-bg-secondary border border-border-light p-4 rounded-lg">
                   <div className="flex items-center text-text-primary font-semibold mb-3">
-                    <Calendar className="w-4 h-4 text-accent-primary mr-2" />
+                    <UpcomingBillsIcon className="w-4 h-4 text-accent-primary mr-2" />
                     Upcoming Bills
                   </div>
                   <SubscriptionList
@@ -331,7 +346,7 @@ function App() {
               <div className="bg-bg-secondary border border-border-light p-4 rounded-lg">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center text-text-primary font-semibold">
-                    <TrendingUp className="w-4 h-4 text-accent-primary mr-2" />
+                    <TrendingUpIcon className="w-4 h-4 text-accent-primary mr-2" />
                     All Transactions - {currentMonth}
                   </div>
                   <div className="text-sm text-text-secondary">

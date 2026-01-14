@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PieChart, Save, RotateCcw, Plus, AlertCircle } from 'lucide-react';
+import { PieChartIcon, SaveChangesIcon, ResetBudgetIcon, PlusIcon, AlertCircleIcon } from './icons';
 import { calculateBudgetAmounts, validateBudgetPercentages, calculateSurplusDistribution } from '../utils/budgetHelpers';
 
 function BudgetAllocation({
@@ -115,7 +115,7 @@ function BudgetAllocation({
       <div className="bg-bg-secondary border border-border-light p-4 rounded-lg">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 bg-accent-primary rounded-lg flex items-center justify-center">
-            <PieChart className="w-5 h-5 text-white" />
+            <PieChartIcon className="w-5 h-5 text-white" />
           </div>
           <div>
             <h2 className="text-lg font-semibold text-text-primary">Budget Allocation</h2>
@@ -129,7 +129,7 @@ function BudgetAllocation({
         {!validation.isValid && (
           <div className="bg-red-50 border border-red-200 p-3 rounded-lg mb-4">
             <div className="flex items-center gap-2 text-red-700">
-              <AlertCircle className="w-4 h-4" />
+              <AlertCircleIcon className="w-4 h-4" />
               <span className="text-sm font-medium">Budget Validation Errors:</span>
             </div>
             <ul className="mt-1 text-sm text-red-600">
@@ -238,7 +238,7 @@ function BudgetAllocation({
                       onClick={() => setShowAddCategory(true)}
                       className="flex items-center gap-2 text-sm text-accent-primary hover:underline"
                     >
-                      <Plus className="w-4 h-4" />
+                      <PlusIcon className="w-4 h-4" />
                       Add Category
                     </button>
                   </td>
@@ -275,14 +275,14 @@ function BudgetAllocation({
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >
-            <Save className="w-4 h-4" />
+            <SaveChangesIcon className="w-4 h-4" />
             Save Changes
           </button>
           <button
             onClick={handleResetBudget}
             className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg text-sm font-medium hover:bg-opacity-90 transition-colors"
           >
-            <RotateCcw className="w-4 h-4" />
+            <ResetBudgetIcon className="w-4 h-4" />
             Reset Budget
           </button>
         </div>

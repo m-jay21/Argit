@@ -1,6 +1,6 @@
 {
   "name": "argit",
-  "version": "1.2.2",
+  "version": "1.3.0",
   "description": "Argit - A desktop personal finance tracking application for Linux",
   "main": "src/main/main.js",
   "homepage": "./",
@@ -51,12 +51,16 @@
       "description": "Argit - A desktop personal finance tracking application for Linux",
       "vendor": "Argit",
       "maintainer": "User <user@example.com>",
+      "icon": "assets/icon.png",
+      "executableName": "argit",
       "desktop": {
         "Name": "Argit",
         "Comment": "Argit - Track your personal finances",
         "Keywords": "finance;money;budget;tracking;expenses;income;subscription;",
         "Icon": "argit",
-        "StartupWMClass": "argit"
+        "StartupWMClass": "argit",
+        "Type": "Application",
+        "Terminal": false
       }
     },
     "win": {

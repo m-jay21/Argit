@@ -13,7 +13,8 @@ export function useLocalStorage() {
       currency: 'USD',
       theme: 'system',
       lastProcessedMonth: null,
-      savingsPot: 0
+      savingsPot: 0,
+      transfersFromSavings: 0
     }
   });
 
@@ -46,6 +47,7 @@ export function useLocalStorage() {
             currency: 'AED',
             theme: 'system',
             savingsPot: 0,
+            transfersFromSavings: 0,
             ...(loadedData?.settings || {})
           }
         };
@@ -63,7 +65,8 @@ export function useLocalStorage() {
             startingBalance: 0,
             currency: 'AED',
             theme: 'system',
-            savingsPot: 0
+            savingsPot: 0,
+            transfersFromSavings: 0
           }
         });
       } finally {

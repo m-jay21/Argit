@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, Edit3, Trash2, Plus, Save, X, AlertCircle } from 'lucide-react';
+import { ManageCategoriesIcon, EditIcon, DeleteIcon, PlusIcon, SaveIcon, XIcon, HelpTextIcon } from './icons';
 import { canDeleteCategory, PROTECTED_CATEGORIES } from '../utils/budgetHelpers';
 
 function CategoryManagement({
@@ -111,7 +111,7 @@ function CategoryManagement({
       <div className="bg-bg-secondary border border-border-light p-4 rounded-lg">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 bg-accent-primary rounded-lg flex items-center justify-center">
-            <Settings className="w-5 h-5 text-white" />
+            <ManageCategoriesIcon className="w-5 h-5 text-white" />
           </div>
           <div>
             <h2 className="text-lg font-semibold text-text-primary">Manage Categories</h2>
@@ -188,14 +188,14 @@ function CategoryManagement({
                               className="p-1 text-green-600 hover:bg-green-50 rounded"
                               title="Save changes"
                             >
-                              <Save className="w-4 h-4" />
+                              <SaveIcon className="w-4 h-4" />
                             </button>
                             <button
                               onClick={handleCancelEdit}
                               className="p-1 text-gray-600 hover:bg-gray-50 rounded"
                               title="Cancel editing"
                             >
-                              <X className="w-4 h-4" />
+                              <XIcon className="w-4 h-4" />
                             </button>
                           </>
                         ) : (
@@ -206,7 +206,7 @@ function CategoryManagement({
                               className="p-1 text-blue-600 hover:bg-blue-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                               title="Edit category"
                             >
-                              <Edit3 className="w-4 h-4" />
+                              <EditIcon className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleDeleteCategory(category.id, category.name)}
@@ -214,7 +214,7 @@ function CategoryManagement({
                               className="p-1 text-red-600 hover:bg-red-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                               title={deleteCheck.canDelete ? "Delete category" : deleteCheck.reason}
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <DeleteIcon className="w-4 h-4" />
                             </button>
                           </>
                         )}
@@ -262,7 +262,7 @@ function CategoryManagement({
                       onClick={() => setShowAddCategory(true)}
                       className="flex items-center gap-2 text-sm text-accent-primary hover:underline"
                     >
-                      <Plus className="w-4 h-4" />
+                      <PlusIcon className="w-4 h-4" />
                       Add New Category
                     </button>
                   </td>
@@ -275,7 +275,7 @@ function CategoryManagement({
         {/* Help Text */}
         <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <div className="flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 text-blue-600 mt-0.5" />
+            <HelpTextIcon className="w-4 h-4 text-blue-600 mt-0.5" />
             <div className="text-sm text-blue-700">
               <p className="font-medium mb-1">Category Management Rules:</p>
               <ul className="text-xs space-y-1">
