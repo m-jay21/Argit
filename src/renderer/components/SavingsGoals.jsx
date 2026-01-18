@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { AvailableForGoalsIcon, PlusIcon, EditIcon, MarkCompleteIcon, DeleteIcon, DollarSignIcon, PercentIcon, ShuffleIcon, TargetIcon } from './icons';
-import { calculateGoalProgress, getNextGoalId, calculateSurplusDistribution } from '../utils/budgetHelpers';
+import { AvailableForGoalsIcon, PlusIcon, EditIcon, MarkCompleteIcon, DeleteIcon, DollarSignIcon, TargetIcon, XIcon, AddIncomeIcon, FromSavingsIcon } from './icons';
+import { calculateGoalProgress, getNextGoalId } from '../utils/budgetHelpers';
 import { getAvailableSavingsFromPot } from '../utils/monthEndProcessing';
 
 function SavingsGoals({
@@ -19,11 +19,13 @@ function SavingsGoals({
   const [goalForm, setGoalForm] = useState({
     name: '',
     description: '',
-    targetAmount: '',
-    contributionType: 'fixed',
-    monthlyContribution: '',
-    percentageContribution: '',
-    priority: 1
+    targetAmount: ''
+  });
+  const [bucketModal, setBucketModal] = useState({
+    isOpen: false,
+    mode: null, // 'add' or 'remove'
+    goalId: null,
+    amount: ''
   });
 
   // Calculate available savings from savings pot only (manual deposits)
@@ -40,8 +42,6 @@ function SavingsGoals({
 
   const handleAddGoal = () => {
     const targetAmount = parseFloat(goalForm.targetAmount);
-    const monthlyContribution = goalForm.contributionType === 'fixed' ? parseFloat(goalForm.monthlyContribution) : 0;
-    const percentageContribution = goalForm.contributionType === 'percentage' ? parseFloat(goalForm.percentageContribution) : null;
 
     if (goalForm.name.trim() && targetAmount > 0) {
       const newGoal = {
@@ -50,12 +50,6 @@ function SavingsGoals({
         description: goalForm.description.trim(),
         targetAmount,
         currentAmount: 0,
-        contributionType: goalForm.contributionType,
-        monthlyContribution: monthlyContribution || 0,
-        percentageContribution,
-        priority: parseInt(goalForm.priority),
-        targetDate: null,
-        calculatedCompletionDate: null,
         isActive: true,
         createdDate: new Date().toISOString(),
         completedDate: null,
@@ -69,11 +63,7 @@ function SavingsGoals({
       setGoalForm({
         name: '',
         description: '',
-        targetAmount: '',
-        contributionType: 'fixed',
-        monthlyContribution: '',
-        percentageContribution: '',
-        priority: 1
+        targetAmount: ''
       });
       setShowAddGoal(false);
     }
@@ -85,11 +75,7 @@ function SavingsGoals({
       setGoalForm({
         name: goal.name,
         description: goal.description || '',
-        targetAmount: goal.targetAmount.toString(),
-        contributionType: goal.contributionType,
-        monthlyContribution: goal.monthlyContribution.toString(),
-        percentageContribution: goal.percentageContribution ? goal.percentageContribution.toString() : '',
-        priority: goal.priority
+        targetAmount: goal.targetAmount.toString()
       });
       setEditingGoal(goalId);
     }
@@ -97,8 +83,6 @@ function SavingsGoals({
 
   const handleSaveEdit = () => {
     const targetAmount = parseFloat(goalForm.targetAmount);
-    const monthlyContribution = goalForm.contributionType === 'fixed' ? parseFloat(goalForm.monthlyContribution) : 0;
-    const percentageContribution = goalForm.contributionType === 'percentage' ? parseFloat(goalForm.percentageContribution) : null;
 
     if (goalForm.name.trim() && targetAmount > 0) {
       const updatedGoals = savingsGoals.map(goal =>
@@ -107,11 +91,7 @@ function SavingsGoals({
               ...goal,
               name: goalForm.name.trim(),
               description: goalForm.description.trim(),
-              targetAmount,
-              contributionType: goalForm.contributionType,
-              monthlyContribution: monthlyContribution || 0,
-              percentageContribution,
-              priority: parseInt(goalForm.priority)
+              targetAmount
             }
           : goal
       );
@@ -121,18 +101,23 @@ function SavingsGoals({
       setGoalForm({
         name: '',
         description: '',
-        targetAmount: '',
-        contributionType: 'fixed',
-        monthlyContribution: '',
-        percentageContribution: '',
-        priority: 1
+        targetAmount: ''
       });
     }
   };
 
   const handleDeleteGoal = (goalId) => {
     const goal = savingsGoals.find(g => g.id === goalId);
-    if (goal && window.confirm(`Are you sure you want to delete "${goal.name}"?`)) {
+    if (goal && window.confirm(`Are you sure you want to delete "${goal.name}"? This will return ${formatCurrency(goal.currentAmount)} to your savings pot.`)) {
+      // Return money to savings pot if goal has money
+      if (goal.currentAmount > 0 && onUpdateSettings) {
+        const currentPot = settings.savingsPot || 0;
+        onUpdateSettings({
+          ...settings,
+          savingsPot: currentPot + goal.currentAmount
+        });
+      }
+      
       const updatedGoals = savingsGoals.filter(g => g.id !== goalId);
       onUpdateSavingsGoals(updatedGoals);
     }
@@ -155,135 +140,134 @@ function SavingsGoals({
     }
   };
 
-  const handleContribute = (goalId) => {
+  const handleAddToBucket = (goalId) => {
+    setBucketModal({
+      isOpen: true,
+      mode: 'add',
+      goalId,
+      amount: ''
+    });
+  };
+
+  const handleRemoveFromBucket = (goalId) => {
+    setBucketModal({
+      isOpen: true,
+      mode: 'remove',
+      goalId,
+      amount: ''
+    });
+  };
+
+  const handleBucketModalSubmit = () => {
+    const { mode, goalId, amount: amountStr } = bucketModal;
     const goal = savingsGoals.find(g => g.id === goalId);
     if (!goal) return;
 
-    let contributionAmount = 0;
-    const contribution = getContributionDisplay(goal);
-
-    if (goal.contributionType === 'fixed') {
-      contributionAmount = goal.monthlyContribution;
-    } else if (goal.contributionType === 'percentage') {
-      contributionAmount = contribution.amount;
-    } else {
-      // For flexible goals, prompt for amount
-      const amountStr = window.prompt(`Enter contribution amount for "${goal.name}":`);
-      if (!amountStr) return;
-      contributionAmount = parseFloat(amountStr);
-      if (isNaN(contributionAmount) || contributionAmount <= 0) return;
-    }
-
-    if (contributionAmount <= 0) return;
-
-    // VALIDATION: Check if there's enough savings money
-    if (contributionAmount > availableForSavings) {
-      alert(`Insufficient savings! You only have ${formatCurrency(availableForSavings)} available for goals, but trying to contribute ${formatCurrency(contributionAmount)}.`);
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount <= 0) {
+      alert('Please enter a valid positive amount.');
       return;
     }
 
-    // Create transaction for the contribution
-    const transaction = {
-      type: 'expense',
-      amount: contributionAmount,
-      description: `Contribution to ${goal.name}`,
-      date: new Date().toISOString().split('T')[0],
-      category: 'Savings'
-    };
-
-    // Add the transaction FIRST and wait for it to complete
-    if (onAddTransaction) {
-      const addTransactionPromise = onAddTransaction(transaction);
-      
-      // Wait for transaction to be saved before updating goals
-      if (addTransactionPromise && typeof addTransactionPromise.then === 'function') {
-        addTransactionPromise.then(() => {
-          updateGoalAmount();
-        }).catch((error) => {
-          console.error('SavingsGoals: Failed to save transaction:', error);
-          alert('Failed to save transaction. Please try again.');
-        });
-      } else {
-        // If onAddTransaction doesn't return a promise, update immediately
-        setTimeout(updateGoalAmount, 100); // Small delay to avoid race condition
+    if (mode === 'add') {
+      // VALIDATION: Check if there's enough savings money
+      if (amount > availableForSavings) {
+        alert(`Insufficient savings! You only have ${formatCurrency(availableForSavings)} available in your savings pot, but trying to add ${formatCurrency(amount)}.`);
+        return;
       }
-    } else {
-      console.error('SavingsGoals: onAddTransaction is not available!');
-    }
 
-    // Function to update goal amount
-    async function updateGoalAmount() {
+      // Check if adding this amount would exceed the target
+      if (goal.currentAmount + amount > goal.targetAmount) {
+        const excess = (goal.currentAmount + amount) - goal.targetAmount;
+        if (!window.confirm(`Adding ${formatCurrency(amount)} would exceed the target by ${formatCurrency(excess)}. Continue anyway?`)) {
+          return;
+        }
+      }
+
+      // Update goal bucket - add money to it
       const updatedGoals = savingsGoals.map(g =>
         g.id === goalId
           ? {
               ...g,
-              currentAmount: g.currentAmount + contributionAmount,
+              currentAmount: g.currentAmount + amount,
               monthlyHistory: [
                 ...(g.monthlyHistory || []),
                 {
                   month: new Date().toISOString().slice(0, 7),
-                  contribution: contributionAmount,
-                  balance: g.currentAmount + contributionAmount
+                  contribution: amount,
+                  balance: g.currentAmount + amount
                 }
               ]
             }
           : g
       );
 
-      try {
-        const result = await onUpdateSavingsGoals(updatedGoals);
+      // Update savings pot - deduct the amount from main pot
+      if (onUpdateSettings) {
+        const currentPot = settings.savingsPot || 0;
+        const newSavingsPot = currentPot - amount;
         
-        // Update savings pot - deduct the contribution amount
-        if (onUpdateSettings) {
-          const currentPot = settings.savingsPot || 0;
-          const newSavingsPot = currentPot - contributionAmount;
-          
-          await onUpdateSettings({
-            ...settings,
-            savingsPot: Math.max(0, newSavingsPot) // Ensure it doesn't go negative
-          });
-        }
-        
-      } catch (error) {
-        console.error('SavingsGoals: Failed to update goals:', error);
-        alert('Failed to update goal progress. Please refresh the page.');
+        onUpdateSettings({
+          ...settings,
+          savingsPot: Math.max(0, newSavingsPot) // Ensure it doesn't go negative
+        });
       }
+
+      onUpdateSavingsGoals(updatedGoals);
+    } else if (mode === 'remove') {
+      if (amount > goal.currentAmount) {
+        alert(`Cannot remove more than what's in the bucket! Current amount: ${formatCurrency(goal.currentAmount)}`);
+        return;
+      }
+
+      // Update goal bucket - remove money from it
+      const updatedGoals = savingsGoals.map(g =>
+        g.id === goalId
+          ? {
+              ...g,
+              currentAmount: g.currentAmount - amount,
+              monthlyHistory: [
+                ...(g.monthlyHistory || []),
+                {
+                  month: new Date().toISOString().slice(0, 7),
+                  contribution: -amount,
+                  balance: g.currentAmount - amount
+                }
+              ]
+            }
+          : g
+      );
+
+      // Update savings pot - add the amount back to main pot
+      if (onUpdateSettings) {
+        const currentPot = settings.savingsPot || 0;
+        onUpdateSettings({
+          ...settings,
+          savingsPot: currentPot + amount
+        });
+      }
+
+      onUpdateSavingsGoals(updatedGoals);
     }
+
+    // Close modal
+    setBucketModal({
+      isOpen: false,
+      mode: null,
+      goalId: null,
+      amount: ''
+    });
   };
 
-  const getContributionDisplay = (goal) => {
-    switch (goal.contributionType) {
-      case 'fixed':
-        return {
-          icon: <DollarSignIcon className="w-4 h-4" />,
-          text: `Fixed: ${formatCurrency(goal.monthlyContribution)}/month`,
-          amount: goal.monthlyContribution
-        };
-      case 'percentage':
-        return {
-          icon: <PercentIcon className="w-4 h-4" />,
-          text: `Percentage: ${goal.percentageContribution}%`,
-          amount: (availableForSavings * goal.percentageContribution) / 100
-        };
-      case 'flexible':
-        return {
-          icon: <ShuffleIcon className="w-4 h-4" />,
-          text: 'Gets remaining funds automatically',
-          amount: 0 // Calculated at distribution time
-        };
-      default:
-        return { icon: null, text: '', amount: 0 };
-    }
+  const handleBucketModalClose = () => {
+    setBucketModal({
+      isOpen: false,
+      mode: null,
+      goalId: null,
+      amount: ''
+    });
   };
 
-  const getEstimatedCompletion = (goal) => {
-    const progress = calculateGoalProgress(goal);
-    if (progress.estimatedCompletion) {
-      const months = Math.ceil((goal.targetAmount - goal.currentAmount) / goal.monthlyContribution);
-      return `${months} months remaining`;
-    }
-    return null;
-  };
 
   return (
     <div className="space-y-5">
@@ -295,13 +279,13 @@ function SavingsGoals({
               <AvailableForGoalsIcon className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="text-sm text-text-secondary">Available for Goals</p>
+              <p className="text-sm text-text-secondary">Available in Savings Pot</p>
               <p className="text-xl font-semibold text-text-primary">
                 {formatCurrency(availableForSavings)}
               </p>
               {settings.savingsPot > 0 && (
                 <div className="text-xs text-text-secondary mt-1">
-                  <p>• Savings Pot: {formatCurrency(settings.savingsPot)} (from manual deposits)</p>
+                  <p>• Total Savings Pot: {formatCurrency(settings.savingsPot)}</p>
                 </div>
               )}
             </div>
@@ -311,7 +295,7 @@ function SavingsGoals({
             className="flex items-center gap-2 px-4 py-2 bg-accent-primary text-white rounded-lg text-sm font-medium hover:bg-opacity-90 transition-colors"
           >
             <PlusIcon className="w-4 h-4" />
-            Add New Goal
+            Add New Goal Bucket
           </button>
         </div>
       </div>
@@ -320,7 +304,7 @@ function SavingsGoals({
       {(showAddGoal || editingGoal) && (
         <div className="bg-bg-secondary border border-border-light p-4 rounded-lg">
           <h3 className="text-lg font-semibold text-text-primary mb-4">
-            {editingGoal ? 'Edit Goal' : 'Add New Goal'}
+            {editingGoal ? 'Edit Goal Bucket' : 'Add New Goal Bucket'}
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -358,65 +342,6 @@ function SavingsGoals({
                 className="w-full px-3 py-2 border border-border-input rounded-lg focus:outline-none focus:border-accent-primary"
               />
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">Contribution Type</label>
-              <select
-                value={goalForm.contributionType}
-                onChange={(e) => setGoalForm({...goalForm, contributionType: e.target.value})}
-                className="w-full px-3 py-2 border border-border-input rounded-lg focus:outline-none focus:border-accent-primary"
-              >
-                <option value="fixed">Fixed Amount</option>
-                <option value="percentage">Percentage</option>
-                <option value="flexible">Flexible (Remaining Funds)</option>
-              </select>
-            </div>
-
-            {goalForm.contributionType === 'fixed' && (
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">Monthly Contribution</label>
-                <input
-                  type="number"
-                  value={goalForm.monthlyContribution}
-                  onChange={(e) => setGoalForm({...goalForm, monthlyContribution: e.target.value})}
-                  placeholder="100"
-                  min="0"
-                  step="0.01"
-                  className="w-full px-3 py-2 border border-border-input rounded-lg focus:outline-none focus:border-accent-primary"
-                />
-              </div>
-            )}
-
-            {goalForm.contributionType === 'percentage' && (
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">Percentage of Savings Pot</label>
-                <input
-                  type="number"
-                  value={goalForm.percentageContribution}
-                  onChange={(e) => setGoalForm({...goalForm, percentageContribution: e.target.value})}
-                  placeholder="10"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  className="w-full px-3 py-2 border border-border-input rounded-lg focus:outline-none focus:border-accent-primary"
-                />
-              </div>
-            )}
-
-            {goalForm.contributionType === 'flexible' && (
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">Priority</label>
-                <select
-                  value={goalForm.priority}
-                  onChange={(e) => setGoalForm({...goalForm, priority: e.target.value})}
-                  className="w-full px-3 py-2 border border-border-input rounded-lg focus:outline-none focus:border-accent-primary"
-                >
-                  <option value={1}>High Priority (1st)</option>
-                  <option value={2}>Medium Priority (2nd)</option>
-                  <option value={3}>Low Priority (3rd)</option>
-                </select>
-              </div>
-            )}
           </div>
 
           <div className="flex gap-3">
@@ -424,7 +349,7 @@ function SavingsGoals({
               onClick={editingGoal ? handleSaveEdit : handleAddGoal}
               className="px-4 py-2 bg-accent-primary text-white rounded-lg text-sm font-medium hover:bg-opacity-90 transition-colors"
             >
-              {editingGoal ? 'Save Changes' : 'Add Goal'}
+              {editingGoal ? 'Save Changes' : 'Add Goal Bucket'}
             </button>
             <button
               onClick={() => {
@@ -433,11 +358,7 @@ function SavingsGoals({
                 setGoalForm({
                   name: '',
                   description: '',
-                  targetAmount: '',
-                  contributionType: 'fixed',
-                  monthlyContribution: '',
-                  percentageContribution: '',
-                  priority: 1
+                  targetAmount: ''
                 });
               }}
               className="px-4 py-2 bg-gray-500 text-white rounded-lg text-sm font-medium hover:bg-opacity-90 transition-colors"
@@ -452,8 +373,6 @@ function SavingsGoals({
       <div className="space-y-4">
         {savingsGoals.filter(goal => goal.isActive).map((goal) => {
           const progress = calculateGoalProgress(goal);
-          const contribution = getContributionDisplay(goal);
-          const completion = getEstimatedCompletion(goal);
 
           return (
             <div key={goal.id} className="bg-bg-secondary border border-border-light p-4 rounded-lg">
@@ -474,13 +393,23 @@ function SavingsGoals({
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => handleContribute(goal.id)}
+                    onClick={() => handleAddToBucket(goal.id)}
                     className="px-3 py-2 bg-accent-primary text-white text-xs rounded-lg hover:bg-opacity-90 transition-colors flex items-center gap-1"
-                    title="Contribute to Goal"
+                    title="Add money to bucket from savings pot"
                   >
-                    <DollarSign className="w-3 h-3" />
-                    Contribute
+                    <AddIncomeIcon className="w-3 h-3" />
+                    Add
                   </button>
+                  {goal.currentAmount > 0 && (
+                    <button
+                      onClick={() => handleRemoveFromBucket(goal.id)}
+                      className="px-3 py-2 bg-gray-600 text-white text-xs rounded-lg hover:bg-opacity-90 transition-colors flex items-center gap-1"
+                      title="Remove money from bucket (returns to savings pot)"
+                    >
+                      <FromSavingsIcon className="w-3 h-3" />
+                      Remove
+                    </button>
+                  )}
                   <button
                     onClick={() => handleEditGoal(goal.id)}
                     className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
@@ -518,17 +447,6 @@ function SavingsGoals({
                   <span>{formatCurrency(progress.remainingAmount)} remaining</span>
                 </div>
               </div>
-
-              {/* Contribution Info */}
-              <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2 text-text-primary">
-                  {contribution.icon}
-                  <span>{contribution.text}</span>
-                </div>
-                {completion && (
-                  <span className="text-text-secondary">• {completion}</span>
-                )}
-              </div>
             </div>
           );
         })}
@@ -536,8 +454,8 @@ function SavingsGoals({
         {savingsGoals.filter(goal => goal.isActive).length === 0 && (
           <div className="text-center py-8 text-text-secondary">
             <TargetIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p className="text-lg font-medium mb-2">No savings goals yet</p>
-            <p className="text-sm">Create your first savings goal to start tracking progress!</p>
+            <p className="text-lg font-medium mb-2">No savings goal buckets yet</p>
+            <p className="text-sm">Create your first goal bucket to start allocating money from your savings pot!</p>
           </div>
         )}
       </div>
@@ -556,6 +474,115 @@ function SavingsGoals({
           </div>
         </div>
       )}
+
+      {/* Bucket Amount Modal */}
+      {bucketModal.isOpen && (() => {
+        const goal = savingsGoals.find(g => g.id === bucketModal.goalId);
+        if (!goal) return null;
+
+        const isAddMode = bucketModal.mode === 'add';
+
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-bg-secondary border border-border-light rounded-lg p-6 w-full max-w-md mx-4">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-text-primary">
+                  {isAddMode ? `Add money to "${goal.name}" bucket` : `Remove money from "${goal.name}" bucket`}
+                </h3>
+                <button
+                  onClick={handleBucketModalClose}
+                  className="p-1 text-text-secondary hover:text-text-primary transition-colors"
+                  title="Close"
+                >
+                  <XIcon className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="space-y-4 mb-6">
+                {isAddMode ? (
+                  <>
+                    <div className="bg-bg-primary p-3 rounded-lg space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-text-secondary">Available in savings pot:</span>
+                        <span className="font-semibold text-text-primary">{formatCurrency(availableForSavings)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-text-secondary">Current in bucket:</span>
+                        <span className="font-semibold text-text-primary">{formatCurrency(goal.currentAmount)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-text-secondary">Target:</span>
+                        <span className="font-semibold text-text-primary">{formatCurrency(goal.targetAmount)}</span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="bg-bg-primary p-3 rounded-lg space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-text-secondary">Current in bucket:</span>
+                      <span className="font-semibold text-text-primary">{formatCurrency(goal.currentAmount)}</span>
+                    </div>
+                    <div className="text-xs text-text-secondary mt-2">
+                      Money will be returned to your savings pot
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-2">
+                    Enter amount to {isAddMode ? 'add' : 'remove'}:
+                  </label>
+                  <input
+                    type="number"
+                    value={bucketModal.amount}
+                    onChange={(e) => setBucketModal({...bucketModal, amount: e.target.value})}
+                    placeholder="0.00"
+                    min="0"
+                    step="0.01"
+                    className="w-full px-3 py-2 border border-border-input rounded-lg focus:outline-none focus:border-accent-primary text-text-primary"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleBucketModalSubmit();
+                      } else if (e.key === 'Escape') {
+                        handleBucketModalClose();
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex gap-3">
+                <button
+                  onClick={handleBucketModalSubmit}
+                  className="flex-1 px-4 py-2 bg-accent-primary text-white rounded-lg text-sm font-medium hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2"
+                >
+                  {isAddMode ? (
+                    <>
+                      <AddIncomeIcon className="w-4 h-4" />
+                      Add to Bucket
+                    </>
+                  ) : (
+                    <>
+                      <FromSavingsIcon className="w-4 h-4" />
+                      Remove from Bucket
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={handleBucketModalClose}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-lg text-sm font-medium hover:bg-opacity-90 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

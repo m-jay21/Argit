@@ -165,17 +165,8 @@ export function getNextGoalId() {
 export function calculateGoalProgress(goal) {
   const progress = goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0;
 
-  let estimatedCompletion = null;
-  if (goal.contributionType === 'fixed' && goal.monthlyContribution > 0) {
-    const remainingAmount = goal.targetAmount - goal.currentAmount;
-    const monthsRemaining = Math.ceil(remainingAmount / goal.monthlyContribution);
-    estimatedCompletion = new Date();
-    estimatedCompletion.setMonth(estimatedCompletion.getMonth() + monthsRemaining);
-  }
-
   return {
     progress: Math.min(100, Math.max(0, progress)),
-    remainingAmount: Math.max(0, goal.targetAmount - goal.currentAmount),
-    estimatedCompletion
+    remainingAmount: Math.max(0, goal.targetAmount - goal.currentAmount)
   };
 }
