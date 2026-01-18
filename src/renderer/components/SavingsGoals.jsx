@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { AvailableForGoalsIcon, PlusIcon, EditIcon, MarkCompleteIcon, DeleteIcon, DollarSignIcon, TargetIcon, XIcon, AddIncomeIcon, FromSavingsIcon } from './icons';
 import { calculateGoalProgress, getNextGoalId } from '../utils/budgetHelpers';
 import { getAvailableSavingsFromPot } from '../utils/monthEndProcessing';
@@ -29,11 +29,10 @@ function SavingsGoals({
   });
 
   // Calculate available savings from savings pot only (manual deposits)
-  const calculateAvailableSavings = () => {
+  // Use useMemo to recalculate when settings.savingsPot changes
+  const availableForSavings = useMemo(() => {
     return getAvailableSavingsFromPot(settings, budgetConfig, monthlyIncome, currentBalance);
-  };
-
-  const availableForSavings = calculateAvailableSavings();
+  }, [settings.savingsPot, settings, budgetConfig, monthlyIncome, currentBalance]);
 
   const formatCurrency = (amount) => {
     const safeAmount = typeof amount === 'number' && !isNaN(amount) ? amount : 0;
