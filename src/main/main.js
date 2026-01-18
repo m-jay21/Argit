@@ -1,8 +1,16 @@
 const { app, BrowserWindow, nativeTheme, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs').promises;
+const fsSync = require('fs');
+const { parseBtopThemeFile } = require('./utils/btopThemeParser');
 
 let mainWindow;
+let caelestiaThemeWatcher = null;
+
+// Caelestia theme file path - using user's home directory
+const CAELESTIA_THEME_PATH = process.env.HOME 
+  ? path.join(process.env.HOME, '.config', 'btop', 'themes', 'caelestia.theme')
+  : path.join(require('os').homedir(), '.config', 'btop', 'themes', 'caelestia.theme');
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -35,9 +43,14 @@ function createWindow() {
     const theme = nativeTheme.shouldUseDarkColors ? 'dark' : 'light';
     mainWindow.webContents.send('theme-changed', theme);
   });
+  
+  // Setup Caelestia theme watcher after window is created
+  setupCaelestiaThemeWatcher();
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -237,3 +250,51 @@ function validateDataStructure(data) {
 ipcMain.handle('get-system-theme', () => {
   return nativeTheme.shouldUseDarkColors ? 'dark' : 'light';
 });
+
+// Caelestia theme IPC handlers
+ipcMain.handle('read-caelestia-theme', async () => {
+  try {
+    // Check if file exists
+    try {
+      await fs.access(CAELESTIA_THEME_PATH);
+    } catch {
+      console.warn('Caelestia theme file not found:', CAELESTIA_THEME_PATH);
+      return null;
+    }
+    const content = await fs.readFile(CAELESTIA_THEME_PATH, 'utf-8');
+    return parseBtopThemeFile(content);
+  } catch (error) {
+    console.error('Error reading Caelestia theme:', error);
+    return null;
+  }
+});
+
+// Setup file watcher for Caelestia theme
+function setupCaelestiaThemeWatcher() {
+  // Check if file exists
+  fs.access(CAELESTIA_THEME_PATH).then(() => {
+    // File exists, set up watcher
+    if (caelestiaThemeWatcher) {
+      fsSync.unwatchFile(CAELESTIA_THEME_PATH, caelestiaThemeWatcher);
+    }
+    
+    caelestiaThemeWatcher = fsSync.watchFile(CAELESTIA_THEME_PATH, { interval: 1000 }, async (curr, prev) => {
+      if (curr.mtime !== prev.mtime) {
+        // File changed, notify renderer
+        try {
+          const content = await fs.readFile(CAELESTIA_THEME_PATH, 'utf-8');
+          const colors = parseBtopThemeFile(content);
+          if (mainWindow && !mainWindow.isDestroyed() && colors) {
+            mainWindow.webContents.send('caelestia-theme-updated', colors);
+          }
+        } catch (error) {
+          console.error('Error handling Caelestia theme update:', error);
+        }
+      }
+    });
+    
+    console.log('Caelestia theme watcher initialized');
+  }).catch(() => {
+    console.warn('Caelestia theme file not found, skipping watcher:', CAELESTIA_THEME_PATH);
+  });
+}

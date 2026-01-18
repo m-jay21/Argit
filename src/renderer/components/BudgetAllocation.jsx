@@ -173,7 +173,7 @@ function BudgetAllocation({
                         step="0.5"
                         value={category.percentage}
                         onChange={(e) => handlePercentageChange(category.id, e.target.value)}
-                        className="w-16 px-2 py-1 text-sm border border-border-input rounded focus:outline-none focus:border-accent-primary"
+                        className="w-16 px-2 py-1 text-sm bg-bg-secondary border border-border-input rounded focus:outline-none focus:border-accent-primary text-text-primary"
                       />
                       <span className="text-xs text-text-secondary ml-1">%</span>
                     </td>
@@ -210,7 +210,7 @@ function BudgetAllocation({
                         value={newCategoryName}
                         onChange={(e) => setNewCategoryName(e.target.value)}
                         placeholder="Category name"
-                        className="px-3 py-2 text-sm border border-border-input rounded focus:outline-none focus:border-accent-primary flex-1"
+                        className="px-3 py-2 text-sm bg-bg-secondary border border-border-input rounded focus:outline-none focus:border-accent-primary flex-1 text-text-primary"
                         onKeyPress={(e) => e.key === 'Enter' && handleAddCategory()}
                       />
                       <button

@@ -177,6 +177,60 @@
         }
       };
     </script>
+    <style>
+      /* Modern scrollbar styling - theme-aware */
+      :root {
+        --scrollbar-track: var(--color-bg-secondary, #fbf8f4);
+        --scrollbar-thumb: var(--color-border-input, #d9cfc4);
+        --scrollbar-thumb-hover: var(--color-accent-primary, #c8a882);
+      }
+
+      /* Webkit browsers (Chrome, Safari, Edge) */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--scrollbar-track);
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-thumb);
+        border-radius: 4px;
+        transition: background 0.2s ease;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--scrollbar-thumb-hover);
+      }
+
+      /* Firefox */
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+      }
+
+      /* Update scrollbar colors when theme changes */
+      [data-theme="dark"] {
+        --scrollbar-track: var(--color-bg-secondary, #2d2d2d);
+        --scrollbar-thumb: var(--color-border-input, #3a3a3a);
+        --scrollbar-thumb-hover: var(--color-accent-primary, #60a5fa);
+      }
+
+      [data-theme="light"] {
+        --scrollbar-track: var(--color-bg-secondary, #f8f9fa);
+        --scrollbar-thumb: var(--color-border-input, #d1d5db);
+        --scrollbar-thumb-hover: var(--color-accent-primary, #3b82f6);
+      }
+
+      [data-theme="caelestia"] {
+        --scrollbar-track: var(--color-bg-secondary, #1d211b);
+        --scrollbar-thumb: var(--color-border-input, #2a2f26);
+        --scrollbar-thumb-hover: var(--color-accent-primary, #a4d397);
+      }
+    </style>
   </head>
   <body class="h-screen m-0 p-0 overflow-hidden">
     <div id="root" class="h-full"></div>

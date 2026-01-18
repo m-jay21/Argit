@@ -13,7 +13,7 @@ import { useLocalStorage } from './hooks/useLocalStorage';
 import { processDueSubscriptions } from './utils/subscriptionHelpers';
 import { calculateBudgetAmounts, calculateCategorySpending } from './utils/budgetHelpers';
 import { processMonthEndSurplus, shouldProcessMonthEnd } from './utils/monthEndProcessing';
-import { initTheme, loadTheme } from './utils/themeLoader';
+import { initTheme, loadTheme, updateCaelestiaTheme } from './utils/themeLoader';
 
 function App() {
   const [theme, setTheme] = useState('light');
@@ -59,17 +59,42 @@ function App() {
 
   // Initialize theme system on mount
   useEffect(() => {
-    const themeId = settings.theme || 'cozy';
-    initTheme(themeId);
+    const initializeTheme = async () => {
+      const themeId = settings.theme || 'cozy';
+      await initTheme(themeId);
+    };
+    initializeTheme();
   }, []); // Only run on mount
 
   // Load theme when settings.theme changes
   useEffect(() => {
-    if (!isLoading) {
-      const themeId = settings.theme || 'cozy';
-      loadTheme(themeId);
-    }
+    const loadThemeAsync = async () => {
+      if (!isLoading) {
+        const themeId = settings.theme || 'cozy';
+        await loadTheme(themeId);
+      }
+    };
+    loadThemeAsync();
   }, [settings.theme, isLoading]);
+
+  // Listen for Caelestia theme updates
+  useEffect(() => {
+    if (window.electronAPI && window.electronAPI.onCaelestiaThemeUpdated) {
+      const handleCaelestiaUpdate = (event, btopColors) => {
+        if (settings.theme === 'caelestia' && btopColors) {
+          updateCaelestiaTheme(btopColors);
+        }
+      };
+      
+      window.electronAPI.onCaelestiaThemeUpdated(handleCaelestiaUpdate);
+      
+      return () => {
+        if (window.electronAPI && window.electronAPI.removeCaelestiaThemeListener) {
+          window.electronAPI.removeCaelestiaThemeListener(handleCaelestiaUpdate);
+        }
+      };
+    }
+  }, [settings.theme]);
 
   // System theme handling (for future use)
   useEffect(() => {

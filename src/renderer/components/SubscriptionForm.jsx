@@ -55,7 +55,7 @@ function SubscriptionForm({ onAddSubscription }) {
           value={formData.name}
           onChange={handleChange}
           placeholder="Netflix, Spotify..."
-          className="bg-white border border-border-input px-3 py-2 rounded-md text-sm text-text-primary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary flex-1 min-w-32"
+          className="bg-bg-secondary border border-border-input px-3 py-2 rounded-md text-sm text-text-primary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary flex-1 min-w-32"
           required
         />
         <input
@@ -66,7 +66,7 @@ function SubscriptionForm({ onAddSubscription }) {
           step="0.01"
           min="0"
           placeholder="50.00"
-          className="bg-white border border-border-input px-3 py-2 rounded-md text-sm text-text-primary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary w-24"
+          className="bg-bg-secondary border border-border-input px-3 py-2 rounded-md text-sm text-text-primary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary w-24"
           required
         />
         <input
@@ -77,7 +77,7 @@ function SubscriptionForm({ onAddSubscription }) {
           min="1"
           max="31"
           placeholder="Day (15)"
-          className="bg-white border border-border-input px-3 py-2 rounded-md text-sm text-text-primary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary w-28"
+          className="bg-bg-secondary border border-border-input px-3 py-2 rounded-md text-sm text-text-primary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary w-28"
           required
         />
       </div>

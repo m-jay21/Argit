@@ -55,7 +55,7 @@ function IncomeForm({ onAddTransaction, settings = {}, onUpdateSettings }) {
           step="0.01"
           min="0"
           placeholder="0.00"
-          className="bg-white border border-border-input px-3 py-2 rounded-md text-sm text-text-primary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary w-24"
+          className="bg-bg-secondary border border-border-input px-3 py-2 rounded-md text-sm text-text-primary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary w-24"
           required
         />
         <input
@@ -65,7 +65,7 @@ function IncomeForm({ onAddTransaction, settings = {}, onUpdateSettings }) {
           onChange={handleChange}
           maxLength="100"
           placeholder="description"
-          className="bg-white border border-border-input px-3 py-2 rounded-md text-sm text-text-primary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary flex-1 min-w-32"
+          className="bg-bg-secondary border border-border-input px-3 py-2 rounded-md text-sm text-text-primary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary flex-1 min-w-32"
           required
         />
       </div>
@@ -120,7 +120,7 @@ function IncomeForm({ onAddTransaction, settings = {}, onUpdateSettings }) {
               alert('Failed to deposit to savings pot. Please try again.');
             }
           }}
-          className="flex-1 bg-teal-600 text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-opacity-90 transition-colors flex items-center justify-center gap-1"
+          className="flex-1 bg-success-color text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-opacity-90 transition-colors flex items-center justify-center gap-1"
           title="Deposit to savings pot (reduces balance, adds to savings pot)"
         >
           <ToSavingsIcon className="w-4 h-4" />

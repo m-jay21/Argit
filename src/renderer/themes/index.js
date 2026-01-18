@@ -2,14 +2,16 @@
 import { cozyTheme } from './cozy';
 import { darkTheme } from './dark';
 import { lightTheme } from './light';
+import { caelestiaTheme, mapBtopColorsToTheme } from './caelestia';
 
 export const themes = {
   cozy: cozyTheme,
   dark: darkTheme,
-  light: lightTheme
+  light: lightTheme,
+  caelestia: caelestiaTheme
 };
 
-export { cozyTheme, darkTheme, lightTheme };
+export { cozyTheme, darkTheme, lightTheme, caelestiaTheme, mapBtopColorsToTheme };
 
 // Get theme by ID
 export function getTheme(themeId) {

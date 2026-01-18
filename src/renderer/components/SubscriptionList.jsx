@@ -22,7 +22,7 @@ function SubscriptionList({ subscriptions, onRemoveSubscription, currency = 'AED
 
   if (subscriptions.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
+      <div className="text-center py-8 text-text-secondary">
         <p>No subscriptions yet</p>
         <p className="text-sm">Add your first subscription above</p>
       </div>
@@ -34,12 +34,12 @@ function SubscriptionList({ subscriptions, onRemoveSubscription, currency = 'AED
   return (
     <div className="space-y-4">
       {/* Summary */}
-      <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+      <div className="bg-bg-secondary rounded-lg p-3 border border-border-light">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-text-primary">
             Total Monthly Cost
           </span>
-          <span className="text-lg font-bold text-gray-900">
+          <span className="text-lg font-bold text-text-primary">
             {formatCurrency(totalMonthly)}
           </span>
         </div>
@@ -52,16 +52,16 @@ function SubscriptionList({ subscriptions, onRemoveSubscription, currency = 'AED
           return (
             <div
               key={subscription.id}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
+              className="flex items-center justify-between p-3 bg-bg-secondary rounded-lg border border-border-light"
             >
               <div className="flex-1 min-w-0">
                 <div className="mb-1">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium text-text-primary truncate">
                     {subscription.name}
                   </p>
                 </div>
 
-                <div className="flex items-center space-x-4 text-xs text-gray-500">
+                <div className="flex items-center space-x-4 text-xs text-text-secondary">
                   <div className="flex items-center space-x-1">
                     <NextBillDateIcon className="h-3 w-3" />
                     <span>Next: {formatDate(subscription.nextBillDate)}</span>
@@ -77,17 +77,17 @@ function SubscriptionList({ subscriptions, onRemoveSubscription, currency = 'AED
 
               <div className="flex items-center space-x-3">
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-sm font-semibold text-text-primary">
                     {formatCurrency(subscription.amount)}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-text-secondary">
                     /month
                   </p>
                 </div>
 
                 <button
                   onClick={() => onRemoveSubscription(subscription.id)}
-                  className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                  className="p-1 text-text-secondary hover:text-error-color transition-colors"
                   title="Delete subscription"
                 >
                   <DeleteIcon className="h-4 w-4" />
