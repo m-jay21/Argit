@@ -230,6 +230,28 @@
         --scrollbar-thumb: var(--color-border-input, #2a2f26);
         --scrollbar-thumb-hover: var(--color-accent-primary, #a4d397);
       }
+
+      /* Ensure border colors work via CSS variables even if Tailwind doesn't regenerate */
+      .border-border-light {
+        border-color: var(--color-border-light) !important;
+      }
+      
+      .border-border-input {
+        border-color: var(--color-border-input) !important;
+      }
+      
+      .border-border-color {
+        border-color: var(--color-border-color) !important;
+      }
+      
+      /* Also handle border-b (bottom border) variants */
+      .border-b.border-border-light {
+        border-bottom-color: var(--color-border-light) !important;
+      }
+      
+      .border-b.border-border-input {
+        border-bottom-color: var(--color-border-input) !important;
+      }
     </style>
   </head>
   <body class="h-screen m-0 p-0 overflow-hidden">
