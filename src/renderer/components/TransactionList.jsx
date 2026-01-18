@@ -19,16 +19,16 @@ function TransactionList({ transactions, onRemoveTransaction, currency = 'AED' }
 
   const getCategoryColor = (category) => {
     const colors = {
-      food: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-      transport: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-      shopping: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
-      entertainment: 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200',
-      utilities: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-      healthcare: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-      education: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
-      subscription: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
-      savings: 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
-      income: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'
+      food: 'bg-red-100 text-red-800',
+      transport: 'bg-blue-100 text-blue-800',
+      shopping: 'bg-purple-100 text-purple-800',
+      entertainment: 'bg-pink-100 text-pink-800',
+      utilities: 'bg-yellow-100 text-yellow-800',
+      healthcare: 'bg-green-100 text-green-800',
+      education: 'bg-indigo-100 text-indigo-800',
+      subscription: 'bg-orange-100 text-orange-800',
+      savings: 'bg-teal-100 text-teal-800',
+      income: 'bg-emerald-100 text-emerald-800'
     };
     // Default to savings color for any unrecognized categories
     return colors[category?.toLowerCase()] || colors.savings;
@@ -36,7 +36,7 @@ function TransactionList({ transactions, onRemoveTransaction, currency = 'AED' }
 
   if (transactions.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+      <div className="text-center py-8 text-gray-500">
         <p>No transactions yet</p>
         <p className="text-sm">Add your first transaction above</p>
       </div>
@@ -48,11 +48,11 @@ function TransactionList({ transactions, onRemoveTransaction, currency = 'AED' }
       {transactions.map((transaction) => (
         <div
           key={transaction.id}
-          className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
+          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
         >
           <div className="flex items-center space-x-3 flex-1">
             <div className={`flex-shrink-0 ${
-              transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+              transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
             }`}>
               {transaction.type === 'income' ? (
                 <ArrowUpCircleIcon className="h-5 w-5" />
@@ -63,7 +63,7 @@ function TransactionList({ transactions, onRemoveTransaction, currency = 'AED' }
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center space-x-2 mb-1">
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                <p className="text-sm font-medium text-gray-900 truncate">
                   {transaction.description}
                 </p>
                 {transaction.category && (
@@ -72,14 +72,14 @@ function TransactionList({ transactions, onRemoveTransaction, currency = 'AED' }
                   </span>
                 )}
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-gray-500">
                 {formatDate(transaction.date)}
               </p>
             </div>
 
             <div className="text-right">
               <p className={`text-sm font-semibold ${
-                transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
               }`}>
                 {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
               </p>
@@ -88,7 +88,7 @@ function TransactionList({ transactions, onRemoveTransaction, currency = 'AED' }
 
           <button
             onClick={() => onRemoveTransaction(transaction.id)}
-            className="ml-3 p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+            className="ml-3 p-1 text-gray-400 hover:text-red-600 transition-colors"
             title="Delete transaction"
           >
             <DeleteIcon className="h-4 w-4" />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AddIncomeSectionIcon, AddExpenseSectionIcon, RecentActivityIcon, AddSubscriptionIcon, UpcomingBillsIcon, SubscriptionPaymentIcon, LoadingSpinnerIcon, XIcon, TrendingUpIcon } from './components/icons';
+import { AddIncomeSectionIcon, AddExpenseSectionIcon, RecentActivityIcon, AddSubscriptionIcon, UpcomingBillsIcon, SubscriptionPaymentIcon, LoadingSpinnerIcon, XIcon, TrendingUpIcon, SettingsIcon } from './components/icons';
 import BalanceDisplay from './components/BalanceDisplay';
 import IncomeForm from './components/IncomeForm';
 import TransactionForm from './components/TransactionForm';
@@ -8,10 +8,12 @@ import SubscriptionForm from './components/SubscriptionForm';
 import SubscriptionList from './components/SubscriptionList';
 import MonthlyStats from './components/MonthlyStats';
 import BudgetGoalsTab from './components/BudgetGoalsTab';
+import SettingsModal from './components/SettingsModal';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { processDueSubscriptions } from './utils/subscriptionHelpers';
 import { calculateBudgetAmounts, calculateCategorySpending } from './utils/budgetHelpers';
 import { processMonthEndSurplus, shouldProcessMonthEnd } from './utils/monthEndProcessing';
+import { initTheme, loadTheme } from './utils/themeLoader';
 
 function App() {
   const [theme, setTheme] = useState('light');
@@ -19,6 +21,7 @@ function App() {
   const [processedPayments, setProcessedPayments] = useState([]);
   const [showPaymentNotification, setShowPaymentNotification] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   // Use the local storage hook for data persistence
   const { data, isLoading, updateTransactions, updateSubscriptions, updateBudgetConfig, updateSavingsGoals, updateSettings } = useLocalStorage();
@@ -54,10 +57,24 @@ function App() {
     }
   }, [transactions, isLoading]); // Removed budgetConfig from dependencies to prevent loop
 
-  // Theme handling
+  // Initialize theme system on mount
   useEffect(() => {
-    if (window.electronAPI) {
-      // Get initial theme
+    const themeId = settings.theme || 'cozy';
+    initTheme(themeId);
+  }, []); // Only run on mount
+
+  // Load theme when settings.theme changes
+  useEffect(() => {
+    if (!isLoading) {
+      const themeId = settings.theme || 'cozy';
+      loadTheme(themeId);
+    }
+  }, [settings.theme, isLoading]);
+
+  // System theme handling (for future use)
+  useEffect(() => {
+    if (window.electronAPI && settings.theme === 'system') {
+      // Get initial system theme
       window.electronAPI.getSystemTheme().then(setTheme);
 
       // Listen for theme changes
@@ -68,7 +85,7 @@ function App() {
         window.electronAPI.removeThemeListener(handleThemeChange);
       };
     }
-  }, []);
+  }, [settings.theme]);
 
   // Auto-process subscription payments when data loads
   useEffect(() => {
@@ -193,8 +210,15 @@ function App() {
         />
 
         {/* Window Title */}
-        <div className="bg-bg-accent px-4 py-2.5 rounded-t-xl text-sm text-text-secondary font-medium">
-          argit - the money manager
+        <div className="bg-bg-accent px-4 py-2.5 rounded-t-xl text-sm text-text-secondary font-medium flex items-center justify-between">
+          <span>argit - the money manager</span>
+          <button
+            onClick={() => setShowSettingsModal(true)}
+            className="p-1.5 text-text-secondary hover:text-text-primary hover:bg-bg-secondary rounded transition-colors"
+            title="Settings"
+          >
+            <SettingsIcon className="w-5 h-5" />
+          </button>
         </div>
 
         <div className="p-5">
@@ -378,6 +402,20 @@ function App() {
         )}
         </div>
       </div>
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        currentTheme={settings.theme || 'cozy'}
+        onThemeChange={async (themeId) => {
+          const updatedSettings = {
+            ...settings,
+            theme: themeId
+          };
+          await updateSettings(updatedSettings);
+        }}
+      />
     </div>
   );
 }

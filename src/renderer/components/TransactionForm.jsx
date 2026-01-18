@@ -100,7 +100,7 @@ function TransactionForm({ onAddTransaction, availableCategories = [], settings 
       
       {/* Savings pot indicator */}
       {(settings.savingsPot || 0) > 0 && (
-        <div className="text-xs text-teal-600 dark:text-teal-400 mb-2 flex items-center gap-1">
+        <div className="text-xs text-teal-600 mb-2 flex items-center gap-1">
           <SavingsPotIcon className="w-3 h-3" />
           Savings pot: {(settings.savingsPot || 0).toFixed(2)} AED available
         </div>

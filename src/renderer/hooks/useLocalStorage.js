@@ -11,7 +11,7 @@ export function useLocalStorage() {
     settings: {
       startingBalance: 0,
       currency: 'USD',
-      theme: 'system',
+      theme: 'cozy',
       lastProcessedMonth: null,
       savingsPot: 0,
       transfersFromSavings: 0
@@ -45,7 +45,7 @@ export function useLocalStorage() {
           settings: {
             startingBalance: 0,
             currency: 'AED',
-            theme: 'system',
+            theme: 'cozy',
             savingsPot: 0,
             transfersFromSavings: 0,
             ...(loadedData?.settings || {})
@@ -64,7 +64,7 @@ export function useLocalStorage() {
           settings: {
             startingBalance: 0,
             currency: 'AED',
-            theme: 'system',
+            theme: 'cozy',
             savingsPot: 0,
             transfersFromSavings: 0
           }

@@ -37,29 +37,29 @@ function MonthlyStats({ transactions, subscriptions, currency = 'AED' }) {
       label: 'Monthly Income',
       value: monthlyIncome,
       icon: TrendingUpIcon,
-      color: 'text-green-600 dark:text-green-400',
-      bgColor: 'bg-green-50 dark:bg-green-900/20'
+      color: 'text-green-600',
+      bgColor: 'bg-green-50'
     },
     {
       label: 'Monthly Expenses',
       value: monthlyExpenses,
       icon: TrendingDownIcon,
-      color: 'text-red-600 dark:text-red-400',
-      bgColor: 'bg-red-50 dark:bg-red-900/20'
+      color: 'text-red-600',
+      bgColor: 'bg-red-50'
     },
     {
       label: 'Net Income',
       value: netIncome,
       icon: NetIncomeIcon,
-      color: netIncome >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400',
-      bgColor: netIncome >= 0 ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'
+      color: netIncome >= 0 ? 'text-green-600' : 'text-red-600',
+      bgColor: netIncome >= 0 ? 'bg-green-50' : 'bg-red-50'
     },
     {
       label: 'Subscriptions',
       value: totalSubscriptions,
       icon: SubscriptionsStatIcon,
-      color: 'text-purple-600 dark:text-purple-400',
-      bgColor: 'bg-purple-50 dark:bg-purple-900/20'
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50'
     }
   ];
 

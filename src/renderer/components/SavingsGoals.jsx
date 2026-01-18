@@ -403,7 +403,7 @@ function SavingsGoals({
                   {goal.currentAmount > 0 && (
                     <button
                       onClick={() => handleRemoveFromBucket(goal.id)}
-                      className="px-3 py-2 bg-gray-600 text-white text-xs rounded-lg hover:bg-opacity-90 transition-colors flex items-center gap-1"
+                      className="px-3 py-2 bg-gray-600 text-white text-xs rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-1"
                       title="Remove money from bucket (returns to savings pot)"
                     >
                       <FromSavingsIcon className="w-3 h-3" />

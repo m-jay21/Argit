@@ -11,9 +11,9 @@ function BalanceDisplay({ balance, currency = 'AED' }) {
   };
 
   const getBalanceColor = () => {
-    if (balance > 0) return 'text-green-600 dark:text-green-400';
-    if (balance < 0) return 'text-red-600 dark:text-red-400';
-    return 'text-yellow-600 dark:text-yellow-400';
+    if (balance > 0) return 'text-green-600';
+    if (balance < 0) return 'text-red-600';
+    return 'text-yellow-600';
   };
 
   const getBalanceIcon = () => {
