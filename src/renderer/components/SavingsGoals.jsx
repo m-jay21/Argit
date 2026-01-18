@@ -157,7 +157,7 @@ function SavingsGoals({
     });
   };
 
-  const handleBucketModalSubmit = () => {
+  const handleBucketModalSubmit = async () => {
     const { mode, goalId, amount: amountStr } = bucketModal;
     const goal = savingsGoals.find(g => g.id === goalId);
     if (!goal) return;
@@ -202,17 +202,19 @@ function SavingsGoals({
       );
 
       // Update savings pot - deduct the amount from main pot
+      // Await to ensure it completes before updating goals
       if (onUpdateSettings) {
         const currentPot = settings.savingsPot || 0;
         const newSavingsPot = currentPot - amount;
         
-        onUpdateSettings({
+        await onUpdateSettings({
           ...settings,
           savingsPot: Math.max(0, newSavingsPot) // Ensure it doesn't go negative
         });
       }
 
-      onUpdateSavingsGoals(updatedGoals);
+      // Update goals after settings are saved
+      await onUpdateSavingsGoals(updatedGoals);
     } else if (mode === 'remove') {
       if (amount > goal.currentAmount) {
         alert(`Cannot remove more than what's in the bucket! Current amount: ${formatCurrency(goal.currentAmount)}`);
@@ -238,15 +240,17 @@ function SavingsGoals({
       );
 
       // Update savings pot - add the amount back to main pot
+      // Await to ensure it completes before updating goals
       if (onUpdateSettings) {
         const currentPot = settings.savingsPot || 0;
-        onUpdateSettings({
+        await onUpdateSettings({
           ...settings,
           savingsPot: currentPot + amount
         });
       }
 
-      onUpdateSavingsGoals(updatedGoals);
+      // Update goals after settings are saved
+      await onUpdateSavingsGoals(updatedGoals);
     }
 
     // Close modal
@@ -314,7 +318,7 @@ function SavingsGoals({
                 value={goalForm.name}
                 onChange={(e) => setGoalForm({...goalForm, name: e.target.value})}
                 placeholder="e.g., Lightsaber, Vacation"
-                className="w-full px-3 py-2 border border-border-input rounded-lg focus:outline-none focus:border-accent-primary"
+                className="w-full px-3 py-2 bg-bg-secondary border border-border-input rounded-lg focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary text-text-primary"
               />
             </div>
 
@@ -327,7 +331,7 @@ function SavingsGoals({
                 placeholder="2000"
                 min="0"
                 step="0.01"
-                className="w-full px-3 py-2 border border-border-input rounded-lg focus:outline-none focus:border-accent-primary"
+                className="w-full px-3 py-2 bg-bg-secondary border border-border-input rounded-lg focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary text-text-primary"
               />
             </div>
 
@@ -338,7 +342,7 @@ function SavingsGoals({
                 value={goalForm.description}
                 onChange={(e) => setGoalForm({...goalForm, description: e.target.value})}
                 placeholder="Custom lightsaber build"
-                className="w-full px-3 py-2 border border-border-input rounded-lg focus:outline-none focus:border-accent-primary"
+                className="w-full px-3 py-2 bg-bg-secondary border border-border-input rounded-lg focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary text-text-primary"
               />
             </div>
           </div>
@@ -540,7 +544,7 @@ function SavingsGoals({
                     placeholder="0.00"
                     min="0"
                     step="0.01"
-                    className="w-full px-3 py-2 border border-border-input rounded-lg focus:outline-none focus:border-accent-primary text-text-primary"
+                    className="w-full px-3 py-2 bg-bg-secondary border border-border-input rounded-lg focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary text-text-primary"
                     autoFocus
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
