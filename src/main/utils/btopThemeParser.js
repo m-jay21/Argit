@@ -8,11 +8,19 @@ const parseBtopTheme = (content) => {
   const lines = content.split('\n');
   
   for (const line of lines) {
+    // Trim whitespace and skip empty lines
+    const trimmedLine = line.trim();
+    if (!trimmedLine) continue;
+    
+    // Skip comment lines (starting with #)
+    if (trimmedLine.startsWith('#')) continue;
+    
     // Match format: theme[key]=#color or theme[key]=color
-    const match = line.match(/theme\[(\w+)\]=([#\w]+)/);
+    // Also handles inline comments: theme[key]=#color # comment
+    const match = trimmedLine.match(/theme\[(\w+)\]=([#\w]+)/);
     if (match) {
       const key = match[1];
-      let color = match[2];
+      let color = match[2].trim();
       // Ensure color starts with #
       if (!color.startsWith('#')) {
         color = '#' + color;
@@ -35,15 +43,27 @@ const mapBtopToAppColors = (btopColors) => {
     background: btopColors.main_bg || '#11140f',
     text: btopColors.main_fg || '#e0e4da',
     
-    // Accent colors - use highlight/selected colors
+    // Accent colors - use highlight/selected colors for primary actions
     accent: btopColors.hi_fg || btopColors.selected_fg || '#a4d397',
     accentHover: btopColors.cpu_box || btopColors.mem_box || '#5bd0df',
     accentDark: btopColors.proc_box || btopColors.net_box || '#6dcfa6',
     
-    // Additional colors for reference
+    // Border colors - USE div_line (semantically correct for borders!)
+    borderMain: btopColors.div_line || btopColors.meter_bg || '#4e453c',
+    borderLight: btopColors.meter_bg || btopColors.inactive_fg || '#9b8f84',
+    borderInput: btopColors.div_line || btopColors.meter_bg || '#4e453c',
+    
+    // Additional colors
     title: btopColors.title || btopColors.main_fg,
     inactive: btopColors.inactive_fg || '#8c9387',
-    selectedBg: btopColors.selected_bg || '#1d211b'
+    selectedBg: btopColors.selected_bg || '#1d211b',
+    
+    // Success/Error colors - use box colors for semantic meaning
+    successColor: btopColors.mem_box || btopColors.cpu_box || '#a4d397', // Yellow/peach for positive
+    errorColor: btopColors.proc_box || btopColors.net_box || '#6dcfa6', // Pink/orange for expenses
+    
+    // Info color for informational text (savings pot, etc.)
+    infoColor: btopColors.cpu_box || btopColors.net_box || '#5bd0df',
   };
 };
 

@@ -406,7 +406,7 @@ function SavingsGoals({
                   {goal.currentAmount > 0 && (
                     <button
                       onClick={() => handleRemoveFromBucket(goal.id)}
-                      className="px-3 py-2 bg-gray-600 text-white text-xs rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-1"
+                      className="px-3 py-2 bg-error-color text-white text-xs rounded-lg hover:bg-opacity-90 transition-colors flex items-center gap-1"
                       title="Remove money from bucket (returns to savings pot)"
                     >
                       <FromSavingsIcon className="w-3 h-3" />
@@ -415,21 +415,21 @@ function SavingsGoals({
                   )}
                   <button
                     onClick={() => handleEditGoal(goal.id)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                    className="p-2 text-accent-primary hover:bg-bg-accent rounded-lg transition-colors"
                     title="Edit Goal"
                   >
                     <EditIcon className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleMarkComplete(goal.id)}
-                    className="p-2 text-green-600 hover:bg-green-50 rounded-lg"
+                    className="p-2 text-success-color hover:bg-bg-accent rounded-lg transition-colors"
                     title="Mark Complete"
                   >
                     <MarkCompleteIcon className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDeleteGoal(goal.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                    className="p-2 text-error-color hover:bg-bg-accent rounded-lg transition-colors"
                     title="Delete Goal"
                   >
                     <DeleteIcon className="w-4 h-4" />

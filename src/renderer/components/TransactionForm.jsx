@@ -100,52 +100,52 @@ function TransactionForm({ onAddTransaction, availableCategories = [], settings 
       
       {/* Savings pot indicator */}
       {(settings.savingsPot || 0) > 0 && (
-        <div className="text-xs text-teal-600 mb-2 flex items-center gap-1">
+        <div className="text-xs text-info-color mb-2 flex items-center gap-1">
           <SavingsPotIcon className="w-3 h-3" />
           Savings pot: {(settings.savingsPot || 0).toFixed(2)} AED available
         </div>
       )}
       
       <div className="flex gap-2 my-1">
-        <button
-          type="button"
-          onClick={() => {
-            if (!formData.amount || !formData.description) return;
-            const amount = parseFloat(formData.amount);
-            if (amount <= 0) return;
+          <button
+            type="button"
+            onClick={() => {
+              if (!formData.amount || !formData.description) return;
+              const amount = parseFloat(formData.amount);
+              if (amount <= 0) return;
 
-            onAddTransaction({
-              ...formData,
-              type: 'expense',
-              amount
-            });
+              onAddTransaction({
+                ...formData,
+                type: 'expense',
+                amount
+              });
 
-            setFormData({
-              type: 'expense',
-              amount: '',
-              description: '',
-              date: new Date().toISOString().split('T')[0],
-              category: availableCategories.length > 0 ? availableCategories[0].name : 'Savings'
-            });
-          }}
+              setFormData({
+                type: 'expense',
+                amount: '',
+                description: '',
+                date: new Date().toISOString().split('T')[0],
+                category: availableCategories.length > 0 ? availableCategories[0].name : 'Savings'
+              });
+            }}
           className="flex-1 bg-error-color text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-opacity-90 transition-colors flex items-center justify-center gap-1"
-        >
+          >
           <AddExpenseIcon className="w-4 h-4" />
           Add Expense
-        </button>
-        <button
-          type="button"
-          onClick={async () => {
-            if (!formData.amount || !formData.description) return;
-            const amount = parseFloat(formData.amount);
-            if (amount <= 0) return;
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              if (!formData.amount || !formData.description) return;
+              const amount = parseFloat(formData.amount);
+              if (amount <= 0) return;
 
-            // Check if there's enough in savings pot
-            const availableSavings = settings.savingsPot || 0;
-            if (amount > availableSavings) {
-              alert(`Insufficient savings! You have ${availableSavings.toFixed(2)} AED in your savings pot, but trying to spend ${amount.toFixed(2)} AED.`);
-              return;
-            }
+              // Check if there's enough in savings pot
+              const availableSavings = settings.savingsPot || 0;
+              if (amount > availableSavings) {
+                alert(`Insufficient savings! You have ${availableSavings.toFixed(2)} AED in your savings pot, but trying to spend ${amount.toFixed(2)} AED.`);
+                return;
+              }
 
             try {
               // Create expense transaction using selected category (counts towards budget)
@@ -159,37 +159,37 @@ function TransactionForm({ onAddTransaction, availableCategories = [], settings 
               };
 
               // Add the transaction first
-              await onAddTransaction(transaction);
-              
+                await onAddTransaction(transaction);
+                
               // Then deduct from savings pot
-              if (onUpdateSettings) {
+                if (onUpdateSettings) {
                 const currentPot = settings.savingsPot || 0;
-                const updatedSettings = {
-                  ...settings,
+                  const updatedSettings = {
+                    ...settings,
                   savingsPot: currentPot - amount
-                };
-                await onUpdateSettings(updatedSettings);
-              }
+                  };
+                  await onUpdateSettings(updatedSettings);
+                }
 
-              // Reset form
-              setFormData({
-                type: 'expense',
-                amount: '',
-                description: '',
-                date: new Date().toISOString().split('T')[0],
-                category: availableCategories.length > 0 ? availableCategories[0].name : 'Savings'
-              });
-            } catch (error) {
+                // Reset form
+                setFormData({
+                  type: 'expense',
+                  amount: '',
+                  description: '',
+                  date: new Date().toISOString().split('T')[0],
+                  category: availableCategories.length > 0 ? availableCategories[0].name : 'Savings'
+                });
+              } catch (error) {
               console.error('Failed to spend from savings:', error);
               alert('Failed to spend from savings. Please try again.');
-            }
-          }}
+              }
+            }}
           className="flex-1 bg-error-color text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-opacity-90 transition-colors flex items-center justify-center gap-1"
-          title={`Spend from savings pot (${(settings.savingsPot || 0).toFixed(2)} AED available) - Uses selected category`}
-        >
+            title={`Spend from savings pot (${(settings.savingsPot || 0).toFixed(2)} AED available) - Uses selected category`}
+          >
           <FromSavingsIcon className="w-4 h-4" />
-          From Savings
-        </button>
+            From Savings
+          </button>
       </div>
     </form>
   );

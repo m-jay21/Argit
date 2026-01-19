@@ -16,6 +16,7 @@ export const lightTheme = {
     'button-hover': '#1d4ed8',
     'success-color': '#10b981',
     'error-color': '#ef4444',
+    'info-color': '#3b82f6',
     'border-color': '#e5e7eb',
     'border-light': '#f3f4f6',
     'border-input': '#d1d5db',

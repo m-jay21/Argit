@@ -16,6 +16,7 @@ export const cozyTheme = {
     'button-hover': '#967d65',
     'success-color': '#6b8e3d',
     'error-color': '#c65d57',
+    'info-color': '#a89074',
     'border-color': '#e8e1d8',
     'border-light': '#ede6dd',
     'border-input': '#d9cfc4',

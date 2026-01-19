@@ -1,6 +1,100 @@
 // Caelestia Theme - Dynamic theme loaded from btop theme file
 // Colors are populated dynamically from ~/.config/btop/themes/caelestia.theme
 
+/**
+ * Darken a hex color by mixing it with black
+ * @param {string} hex - Hex color (e.g., '#ffdb96')
+ * @param {number} amount - Amount to darken (0-1, where 0.4 = 40% darker)
+ * @returns {string} Darkened hex color
+ */
+function darkenColor(hex, amount = 0.4) {
+  if (!hex || !hex.startsWith('#')) return hex;
+  
+  hex = hex.replace('#', '');
+  
+  // Parse RGB
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  
+  // Mix with black (0, 0, 0)
+  const newR = Math.floor(r * (1 - amount));
+  const newG = Math.floor(g * (1 - amount));
+  const newB = Math.floor(b * (1 - amount));
+  
+  // Convert back to hex
+  return `#${[newR, newG, newB].map(x => {
+    const hex = x.toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
+  }).join('')}`;
+}
+
+/**
+ * Desaturate a hex color (reduce color intensity)
+ * @param {string} hex - Hex color
+ * @param {number} amount - Amount to desaturate (0-1, where 0.3 = 30% less saturated)
+ * @returns {string} Desaturated hex color
+ */
+function desaturateColor(hex, amount = 0.3) {
+  if (!hex || !hex.startsWith('#')) return hex;
+  
+  hex = hex.replace('#', '');
+  
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  
+  // Convert to grayscale
+  const gray = r * 0.299 + g * 0.587 + b * 0.114;
+  
+  // Mix original with grayscale
+  const newR = Math.floor(r * (1 - amount) + gray * amount);
+  const newG = Math.floor(g * (1 - amount) + gray * amount);
+  const newB = Math.floor(b * (1 - amount) + gray * amount);
+  
+  return `#${[newR, newG, newB].map(x => {
+    const hex = x.toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
+  }).join('')}`;
+}
+
+/**
+ * Adjust color for dark backgrounds: darken and slightly desaturate
+ * @param {string} hex - Hex color
+ * @returns {string} Adjusted color
+ */
+function adjustForDarkBg(hex) {
+  if (!hex || !hex.startsWith('#')) return hex;
+  // First darken, then slightly desaturate for better readability
+  return desaturateColor(darkenColor(hex, 0.35), 0.15);
+}
+
+/**
+ * Lighten a hex color by mixing it with white
+ * @param {string} hex - Hex color
+ * @param {number} amount - Amount to lighten (0-1)
+ * @returns {string} Lightened hex color
+ */
+function lightenColor(hex, amount = 0.2) {
+  if (!hex || !hex.startsWith('#')) return hex;
+  
+  hex = hex.replace('#', '');
+  
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  
+  // Mix with white (255, 255, 255)
+  const newR = Math.floor(r + (255 - r) * amount);
+  const newG = Math.floor(g + (255 - g) * amount);
+  const newB = Math.floor(b + (255 - b) * amount);
+  
+  return `#${[newR, newG, newB].map(x => {
+    const hex = x.toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
+  }).join('')}`;
+}
+
 // Default colors (fallback if file not found)
 const defaultCaelestiaColors = {
   // Background colors
@@ -16,6 +110,7 @@ const defaultCaelestiaColors = {
   'button-hover': '#6dcfa6',
   'success-color': '#a4d397', // Same as accent-primary for Caelestia
   'error-color': '#6dcfa6', // Alt color for Add Expense and From Savings
+  'info-color': '#5bd0df', // Info color for informational text (savings pot, etc.)
   'border-color': '#2a2f26',
   'border-light': '#3a3f36',
   'border-input': '#2a2f26',
@@ -168,34 +263,66 @@ export function mapBtopColorsToTheme(btopColors) {
     return defaultCaelestiaColors;
   }
   
+  // Systematically adjust ALL bright colors from btop for dark background
+  // This ensures good contrast throughout the app
+  const adjustedAccent = adjustForDarkBg(btopColors.accent || '#a4d397');
+  const adjustedAccentHover = adjustForDarkBg(btopColors.accentHover || '#5bd0df');
+  const adjustedAccentDark = adjustForDarkBg(btopColors.accentDark || '#6dcfa6');
+  const adjustedSuccess = adjustForDarkBg(btopColors.successColor || btopColors.accent || '#a4d397');
+  const adjustedError = adjustForDarkBg(btopColors.errorColor || btopColors.accentDark || '#6dcfa6');
+  
+  // For borders, use a subtle approach like dark theme:
+  // - Use div_line/meter_bg if available, but darken them to be subtle
+  // - If too bright, mix with background to create subtle borders
+  const bgColor = btopColors.background || '#11140f';
+  const borderBase = btopColors.borderMain || btopColors.meter_bg || btopColors.selectedBg || '#2a2f26';
+  
+  // Create subtle borders by mixing border color with background (similar to dark theme approach)
+  // This ensures borders are visible but not bright/white
+  const borderColor = lightenColor(bgColor, 0.15); // Slightly lighter than background
+  const borderLight = lightenColor(bgColor, 0.2); // A bit lighter for subtle dividers
+  const borderInput = lightenColor(bgColor, 0.12); // Slightly lighter for input borders
+  
   return {
-    // Map btop colors to app colors
+    // Background colors (keep as-is, these are already dark)
     'bg-primary': btopColors.background || defaultCaelestiaColors['bg-primary'],
     'bg-secondary': btopColors.selectedBg || defaultCaelestiaColors['bg-secondary'],
     'bg-accent': btopColors.selectedBg || defaultCaelestiaColors['bg-accent'],
+    
+    // Text colors (keep as-is, these are already light)
     'text-primary': btopColors.text || defaultCaelestiaColors['text-primary'],
     'text-secondary': btopColors.inactive || defaultCaelestiaColors['text-secondary'],
     'text-tertiary': btopColors.inactive || defaultCaelestiaColors['text-tertiary'],
-    // All buttons use the same color (main accent)
-    'accent-primary': btopColors.accent || defaultCaelestiaColors['accent-primary'],
-    'accent-secondary': btopColors.accentDark || defaultCaelestiaColors['accent-secondary'],
-    'button-primary': btopColors.accent || defaultCaelestiaColors['button-primary'], // Same as accent-primary
-    'button-hover': btopColors.accentHover || defaultCaelestiaColors['button-hover'],
-    'success-color': btopColors.accent || defaultCaelestiaColors['success-color'], // Same as accent-primary
-    // Error color (for Add Expense and From Savings) uses alt color
-    'error-color': btopColors.accentDark || btopColors.accentHover || defaultCaelestiaColors['error-color'],
-    'border-color': btopColors.selectedBg || defaultCaelestiaColors['border-color'],
-    'border-light': defaultCaelestiaColors['border-light'],
-    'border-input': btopColors.selectedBg || defaultCaelestiaColors['border-input'],
+    
+    // Accent colors - ADJUSTED for dark background
+    'accent-primary': adjustedAccent,
+    'accent-secondary': adjustedAccentDark,
+    
+    // Button colors - ADJUSTED for dark background
+    'button-primary': adjustedAccent,
+    'button-hover': adjustedAccentHover,
+    
+    // Action colors - ADJUSTED for dark background
+    'success-color': adjustedSuccess,
+    'error-color': adjustedError,
+    
+    // Info color for informational text (adjusted for dark background)
+    'info-color': adjustForDarkBg(btopColors.infoColor || '#5bd0df'),
+    
+    // Border colors - Use subtle approach like dark/light themes (not bright/white)
+    'border-color': borderColor,
+    'border-light': borderLight,
+    'border-input': borderInput,
+    
     'shadow-light': 'rgba(0,0,0,0.5)',
-    'shadow-accent': `rgba(${hexToRgb(btopColors.accent || '#a4d397')}, 0.2)`,
+    'shadow-accent': `rgba(${hexToRgb(adjustedAccent)}, 0.2)`,
     
     // Keep other colors from defaults
     ...Object.fromEntries(
       Object.entries(defaultCaelestiaColors).filter(([key]) => 
         !['bg-primary', 'bg-secondary', 'bg-accent', 'text-primary', 'text-secondary', 
           'text-tertiary', 'accent-primary', 'accent-secondary', 'button-primary', 
-          'button-hover', 'success-color', 'border-color', 'border-light', 'border-input', 
+          'button-hover', 'success-color', 'error-color', 'info-color', 'border-color', 'border-light', 'border-input', 
           'shadow-light', 'shadow-accent'].includes(key)
       )
     )

@@ -313,8 +313,8 @@ function App() {
                 {/* Left Column - Income and Expense Forms */}
                 <div className="space-y-5">
                   {/* Add Income Section */}
-                  <div className="bg-bg-secondary border border-border-light p-4 rounded-lg">
-                    <div className="flex items-center text-text-primary font-semibold mb-3">
+                <div className="bg-bg-secondary border border-border-light p-4 rounded-lg">
+                  <div className="flex items-center text-text-primary font-semibold mb-3">
                       <AddIncomeSectionIcon className="w-4 h-4 text-accent-primary mr-2" />
                       Add Income
                     </div>
@@ -330,13 +330,13 @@ function App() {
                     <div className="flex items-center text-text-primary font-semibold mb-3">
                       <AddExpenseSectionIcon className="w-4 h-4 text-accent-primary mr-2" />
                       Add Expense
-                    </div>
-                    <TransactionForm
-                      onAddTransaction={addTransaction}
-                      availableCategories={budgetConfig?.categories || []}
-                      settings={settings || {}}
-                      onUpdateSettings={updateSettings}
-                    />
+                  </div>
+                  <TransactionForm
+                    onAddTransaction={addTransaction}
+                    availableCategories={budgetConfig?.categories || []}
+                    settings={settings || {}}
+                    onUpdateSettings={updateSettings}
+                  />
                   </div>
                 </div>
 

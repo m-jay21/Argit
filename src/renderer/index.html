@@ -252,6 +252,31 @@
       .border-b.border-border-input {
         border-bottom-color: var(--color-border-input) !important;
       }
+
+      /* Ensure input fields have visible borders in production - more specific selectors */
+      input[class*="border-border-input"],
+      select[class*="border-border-input"],
+      textarea[class*="border-border-input"] {
+        border: 1px solid var(--color-border-input) !important;
+        border-width: 1px !important;
+      }
+
+      /* Also target elements with border class */
+      .border.border-border-input,
+      input.border,
+      select.border,
+      textarea.border {
+        border: 1px solid var(--color-border-input) !important;
+      }
+
+      /* Ensure focus states work for inputs */
+      input[class*="border-border-input"]:focus,
+      select[class*="border-border-input"]:focus,
+      textarea[class*="border-border-input"]:focus,
+      .border.border-border-input:focus {
+        border-color: var(--color-accent-primary) !important;
+        outline: none !important;
+      }
     </style>
   </head>
   <body class="h-screen m-0 p-0 overflow-hidden">

@@ -16,6 +16,7 @@ export const darkTheme = {
     'button-hover': '#2563eb',
     'success-color': '#34d399',
     'error-color': '#f87171',
+    'info-color': '#60a5fa',
     'border-color': '#404040',
     'border-light': '#525252',
     'border-input': '#3a3a3a',
