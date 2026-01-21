@@ -12,7 +12,7 @@ import SettingsModal from './components/SettingsModal';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { processDueSubscriptions } from './utils/subscriptionHelpers';
 import { calculateBudgetAmounts, calculateCategorySpending } from './utils/budgetHelpers';
-import { processMonthEndSurplus, shouldProcessMonthEnd } from './utils/monthEndProcessing';
+import { processPayDayReset, processMonthEndSurplus, shouldProcessPayDay, shouldProcessMonthEnd } from './utils/monthEndProcessing';
 import { initTheme, loadTheme, updateCaelestiaTheme } from './utils/themeLoader';
 
 function App() {
@@ -142,27 +142,53 @@ function App() {
     }
   }, [isLoading]); // Only run when loading state changes
 
-  // Auto-process month-end surplus when data loads
+  // Auto-process pay day reset when data loads
   useEffect(() => {
     if (!isLoading && budgetConfig && transactions && settings) {
-      if (shouldProcessMonthEnd(settings.lastProcessedMonth)) {
-        processMonthEndSurplus(
-          budgetConfig,
-          transactions,
-          settings,
-          updateTransactions,
-          updateSettings
-        ).then(result => {
-          if (result.processed) {
-            console.log('Month-end processing:', result.message);
-            if (result.backupCreated) {
-              console.log('Transaction backup saved to:', result.backupPath);
+      const payDay = settings.payDay !== undefined && settings.payDay !== null ? settings.payDay : null;
+      
+      // Use payDay logic if payDay is set, otherwise fall back to month-based logic
+      if (payDay !== null) {
+        if (shouldProcessPayDay(payDay, settings.lastProcessedPayDay)) {
+          processPayDayReset(
+            budgetConfig,
+            transactions,
+            settings,
+            updateTransactions,
+            updateSettings
+          ).then(result => {
+            if (result.processed) {
+              console.log('Pay day processing:', result.message);
+              if (result.backupCreated) {
+                console.log('Transaction backup saved to:', result.backupPath);
+              }
+              // Could show a notification here about balance reset and backup created
             }
-            // Could show a notification here about surplus added to savings and backup created
-          }
-        }).catch(error => {
-          console.error('Month-end processing failed:', error);
-        });
+          }).catch(error => {
+            console.error('Pay day processing failed:', error);
+          });
+        }
+      } else {
+        // Legacy month-based processing
+        if (shouldProcessMonthEnd(settings.lastProcessedMonth)) {
+          processMonthEndSurplus(
+            budgetConfig,
+            transactions,
+            settings,
+            updateTransactions,
+            updateSettings
+          ).then(result => {
+            if (result.processed) {
+              console.log('Month-end processing:', result.message);
+              if (result.backupCreated) {
+                console.log('Transaction backup saved to:', result.backupPath);
+              }
+              // Could show a notification here about surplus added to savings and backup created
+            }
+          }).catch(error => {
+            console.error('Month-end processing failed:', error);
+          });
+        }
       }
     }
   }, [isLoading]); // Only run when loading state changes
@@ -440,6 +466,8 @@ function App() {
           };
           await updateSettings(updatedSettings);
         }}
+        settings={settings}
+        onUpdateSettings={updateSettings}
       />
     </div>
   );

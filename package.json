@@ -1,6 +1,6 @@
 {
   "name": "argit",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Argit - A desktop personal finance tracking application for Linux",
   "main": "src/main/main.js",
   "homepage": "./",

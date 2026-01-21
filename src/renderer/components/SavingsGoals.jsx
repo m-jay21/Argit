@@ -181,7 +181,7 @@ function SavingsGoals({
         if (!window.confirm(`Adding ${formatCurrency(amount)} would exceed the target by ${formatCurrency(excess)}. Continue anyway?`)) {
           return;
         }
-      }
+    }
 
       // Update goal bucket - add money to it
       const updatedGoals = savingsGoals.map(g =>
@@ -203,16 +203,16 @@ function SavingsGoals({
 
       // Update savings pot - deduct the amount from main pot
       // Await to ensure it completes before updating goals
-      if (onUpdateSettings) {
-        const currentPot = settings.savingsPot || 0;
+        if (onUpdateSettings) {
+          const currentPot = settings.savingsPot || 0;
         const newSavingsPot = currentPot - amount;
+          
+          await onUpdateSettings({
+            ...settings,
+            savingsPot: Math.max(0, newSavingsPot) // Ensure it doesn't go negative
+          });
+        }
         
-        await onUpdateSettings({
-          ...settings,
-          savingsPot: Math.max(0, newSavingsPot) // Ensure it doesn't go negative
-        });
-      }
-
       // Update goals after settings are saved
       await onUpdateSavingsGoals(updatedGoals);
     } else if (mode === 'remove') {

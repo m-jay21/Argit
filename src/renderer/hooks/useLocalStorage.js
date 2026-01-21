@@ -13,6 +13,8 @@ export function useLocalStorage() {
       currency: 'USD',
       theme: 'cozy',
       lastProcessedMonth: null,
+      payDay: 1,
+      lastProcessedPayDay: null,
       savingsPot: 0,
       transfersFromSavings: 0
     }
@@ -46,6 +48,7 @@ export function useLocalStorage() {
             startingBalance: 0,
             currency: 'AED',
             theme: 'cozy',
+            payDay: 1,
             savingsPot: 0,
             transfersFromSavings: 0,
             ...(loadedData?.settings || {})
@@ -65,6 +68,7 @@ export function useLocalStorage() {
             startingBalance: 0,
             currency: 'AED',
             theme: 'cozy',
+            payDay: 1,
             savingsPot: 0,
             transfersFromSavings: 0
           }

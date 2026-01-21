@@ -1,14 +1,38 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { XIcon, SettingsIcon } from './icons';
 import { getAllThemes } from '../themes';
 
-function SettingsModal({ isOpen, onClose, currentTheme, onThemeChange }) {
+function SettingsModal({ isOpen, onClose, currentTheme, onThemeChange, settings, onUpdateSettings }) {
+  const [payDay, setPayDay] = useState(settings?.payDay || 1);
+  
+  useEffect(() => {
+    if (settings?.payDay !== undefined) {
+      setPayDay(settings.payDay);
+    }
+  }, [settings?.payDay]);
+
   if (!isOpen) return null;
 
   const themes = getAllThemes();
 
   const handleThemeSelect = (themeId) => {
     onThemeChange(themeId);
+  };
+
+  const handlePayDayChange = (e) => {
+    const value = parseInt(e.target.value, 10);
+    if (value >= 1 && value <= 31) {
+      setPayDay(value);
+    }
+  };
+
+  const handlePayDayBlur = async () => {
+    if (payDay >= 1 && payDay <= 31 && onUpdateSettings) {
+      await onUpdateSettings({
+        ...settings,
+        payDay: payDay
+      });
+    }
   };
 
   return (
@@ -53,6 +77,29 @@ function SettingsModal({ isOpen, onClose, currentTheme, onThemeChange }) {
                   </div>
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Pay Day Section */}
+          <div>
+            <h4 className="text-sm font-medium text-text-primary mb-1">Pay Day</h4>
+            <p className="text-xs text-text-secondary mb-3">
+              Set the recurring date when your balance resets and transfers to savings. This happens automatically on or after this day each month.
+            </p>
+            <div className="flex items-center gap-2">
+              <label htmlFor="payDay" className="text-sm text-text-secondary whitespace-nowrap">
+                Day of month:
+              </label>
+              <input
+                id="payDay"
+                type="number"
+                min="1"
+                max="31"
+                value={payDay}
+                onChange={handlePayDayChange}
+                onBlur={handlePayDayBlur}
+                className="flex-1 px-3 py-2 bg-bg-secondary text-text-primary border border-border-input rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-accent-primary"
+              />
             </div>
           </div>
         </div>
