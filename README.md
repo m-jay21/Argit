@@ -361,7 +361,6 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 * [Electron](https://www.electronjs.org/) - Desktop framework
 * [React](https://react.dev/) - UI library
 * [Vite](https://vitejs.dev/) - Build tool
-* [Lucide](https://lucide.dev/) - Icon library
 * [Electron Builder](https://www.electron.build/) - Packaging tool
 * [Tailwind CSS](https://tailwindcss.com/) - CSS framework
 
