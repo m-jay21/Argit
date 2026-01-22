@@ -27,6 +27,10 @@ function SavingsGoals({
     goalId: null,
     amount: ''
   });
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    goalId: null
+  });
 
   // Calculate available savings from savings pot only (manual deposits)
   // Use useMemo to recalculate when settings.savingsPot changes
@@ -106,20 +110,36 @@ function SavingsGoals({
   };
 
   const handleDeleteGoal = (goalId) => {
-    const goal = savingsGoals.find(g => g.id === goalId);
-    if (goal && window.confirm(`Are you sure you want to delete "${goal.name}"? This will return ${formatCurrency(goal.currentAmount)} to your savings pot.`)) {
-      // Return money to savings pot if goal has money
-      if (goal.currentAmount > 0 && onUpdateSettings) {
-        const currentPot = settings.savingsPot || 0;
-        onUpdateSettings({
-          ...settings,
-          savingsPot: currentPot + goal.currentAmount
-        });
-      }
-      
-      const updatedGoals = savingsGoals.filter(g => g.id !== goalId);
-      onUpdateSavingsGoals(updatedGoals);
+    setDeleteModal({
+      isOpen: true,
+      goalId
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    const goal = savingsGoals.find(g => g.id === deleteModal.goalId);
+    if (!goal) {
+      setDeleteModal({ isOpen: false, goalId: null });
+      return;
     }
+
+    // Return money to savings pot if goal has money
+    if (goal.currentAmount > 0 && onUpdateSettings) {
+      const currentPot = settings.savingsPot || 0;
+      await onUpdateSettings({
+        ...settings,
+        savingsPot: currentPot + goal.currentAmount
+      });
+    }
+    
+    const updatedGoals = savingsGoals.filter(g => g.id !== deleteModal.goalId);
+    await onUpdateSavingsGoals(updatedGoals);
+    
+    setDeleteModal({ isOpen: false, goalId: null });
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModal({ isOpen: false, goalId: null });
   };
 
   const handleMarkComplete = (goalId) => {
@@ -577,6 +597,72 @@ function SavingsGoals({
                 </button>
                 <button
                   onClick={handleBucketModalClose}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-lg text-sm font-medium hover:bg-opacity-90 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && (() => {
+        const goal = savingsGoals.find(g => g.id === deleteModal.goalId);
+        if (!goal) return null;
+
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-bg-secondary border border-border-light rounded-lg p-6 w-full max-w-md mx-4">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-text-primary">
+                  Delete Goal Bucket
+                </h3>
+                <button
+                  onClick={handleDeleteCancel}
+                  className="p-1 text-text-secondary hover:text-text-primary transition-colors"
+                  title="Close"
+                >
+                  <XIcon className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="space-y-4 mb-6">
+                <p className="text-text-primary">
+                  Are you sure you want to delete <span className="font-semibold">"{goal.name}"</span>?
+                </p>
+                
+                {goal.currentAmount > 0 && (
+                  <div className="bg-bg-primary p-3 rounded-lg space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-text-secondary">Current in bucket:</span>
+                      <span className="font-semibold text-text-primary">{formatCurrency(goal.currentAmount)}</span>
+                    </div>
+                    <div className="text-xs text-text-secondary mt-2">
+                      This amount will be returned to your savings pot
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-sm text-text-secondary">
+                  This action cannot be undone.
+                </p>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex gap-3">
+                <button
+                  onClick={handleDeleteConfirm}
+                  className="flex-1 px-4 py-2 bg-error-color text-white rounded-lg text-sm font-medium hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2"
+                >
+                  <DeleteIcon className="w-4 h-4" />
+                  Delete Bucket
+                </button>
+                <button
+                  onClick={handleDeleteCancel}
                   className="px-4 py-2 bg-gray-500 text-white rounded-lg text-sm font-medium hover:bg-opacity-90 transition-colors"
                 >
                   Cancel

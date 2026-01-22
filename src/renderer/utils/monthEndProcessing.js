@@ -31,7 +31,7 @@ export function getTargetPayDayDate(payDay) {
  * Checks if the pay day reset should be processed
  * Returns true if:
  * - Today is on or after the pay day
- * - We haven't processed this pay day period yet
+ * - We haven't processed this pay day period yet (this month)
  */
 export function shouldProcessPayDay(payDay, lastProcessedPayDay) {
   if (!payDay || payDay < 1 || payDay > 31) {
@@ -54,12 +54,30 @@ export function shouldProcessPayDay(payDay, lastProcessedPayDay) {
     return today >= targetDate;
   }
   
-  // Check if we've already processed this pay day period
-  const lastProcessed = new Date(lastProcessedPayDay);
+  // Parse the last processed date string (format: YYYY-MM-DD)
+  // Use local time to avoid timezone issues
+  const [year, month, day] = lastProcessedPayDay.split('-').map(Number);
+  const lastProcessed = new Date(year, month - 1, day); // month is 0-indexed
   lastProcessed.setHours(0, 0, 0, 0);
   
-  // Process if last processed date is before the target pay day date
-  return lastProcessed < targetDate;
+  // If we processed today, don't process again (prevents multiple runs on same day)
+  if (lastProcessed.getTime() === today.getTime()) {
+    return false;
+  }
+  
+  // Get the month/year of the last processed date and the target date
+  const lastProcessedMonth = lastProcessed.getMonth();
+  const lastProcessedYear = lastProcessed.getFullYear();
+  const targetMonth = targetDate.getMonth();
+  const targetYear = targetDate.getFullYear();
+  
+  // If we've already processed this month's pay day, don't process again
+  if (lastProcessedMonth === targetMonth && lastProcessedYear === targetYear) {
+    return false;
+  }
+  
+  // Process if we haven't processed this month yet
+  return true;
 }
 
 // Legacy function for backward compatibility
@@ -169,7 +187,11 @@ export function processPayDayReset(budgetConfig, transactions, settings, updateT
       
       // Get the target pay day date for tracking
       const targetPayDayDate = getTargetPayDayDate(payDay);
-      const processedDateString = targetPayDayDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+      // Store date in YYYY-MM-DD format using local time (not UTC)
+      const year = targetPayDayDate.getFullYear();
+      const month = String(targetPayDayDate.getMonth() + 1).padStart(2, '0');
+      const day = String(targetPayDayDate.getDate()).padStart(2, '0');
+      const processedDateString = `${year}-${month}-${day}`;
       
       // Clear all transactions - they're no longer needed
       await updateTransactions([]);
