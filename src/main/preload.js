@@ -12,10 +12,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSystemTheme: () => ipcRenderer.invoke('get-system-theme'),
   onThemeChanged: (callback) => ipcRenderer.on('theme-changed', callback),
 
-  // Caelestia theme operations
-  readCaelestiaTheme: () => ipcRenderer.invoke('read-caelestia-theme'),
-  onCaelestiaThemeUpdated: (callback) => ipcRenderer.on('caelestia-theme-updated', callback),
-  removeCaelestiaThemeListener: (callback) => ipcRenderer.removeListener('caelestia-theme-updated', callback),
+  // Custom theme operations
+  readCustomTheme: () => ipcRenderer.invoke('read-custom-theme'),
+  selectCustomThemeFile: () => ipcRenderer.invoke('select-custom-theme-file'),
+  reinitializeCustomThemeWatcher: () => ipcRenderer.invoke('reinitialize-custom-theme-watcher'),
+  onCustomThemeUpdated: (callback) => ipcRenderer.on('custom-theme-updated', callback),
+  removeCustomThemeListener: (callback) => ipcRenderer.removeListener('custom-theme-updated', callback),
 
   // Platform info
   platform: process.platform,

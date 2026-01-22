@@ -5,6 +5,7 @@ import { getAllThemes } from '../themes';
 function SettingsModal({ isOpen, onClose, currentTheme, onThemeChange, settings, onUpdateSettings }) {
   const [payDay, setPayDay] = useState(settings?.payDay || 1);
   const [currency, setCurrency] = useState(settings?.currency || 'USD');
+  const [customThemePath, setCustomThemePath] = useState(settings?.customThemePath || null);
   
   useEffect(() => {
     if (settings?.payDay !== undefined) {
@@ -17,6 +18,12 @@ function SettingsModal({ isOpen, onClose, currentTheme, onThemeChange, settings,
       setCurrency(settings.currency);
     }
   }, [settings?.currency]);
+
+  useEffect(() => {
+    if (settings?.customThemePath !== undefined) {
+      setCustomThemePath(settings.customThemePath);
+    }
+  }, [settings?.customThemePath]);
 
   if (!isOpen) return null;
 
@@ -50,6 +57,33 @@ function SettingsModal({ isOpen, onClose, currentTheme, onThemeChange, settings,
         ...settings,
         currency: newCurrency
       });
+    }
+  };
+
+  const handleSelectCustomThemeFile = async () => {
+    if (!window.electronAPI || !window.electronAPI.selectCustomThemeFile) {
+      return;
+    }
+    
+    try {
+      const result = await window.electronAPI.selectCustomThemeFile();
+      if (result.success && result.filePath && onUpdateSettings) {
+        setCustomThemePath(result.filePath);
+        await onUpdateSettings({
+          ...settings,
+          customThemePath: result.filePath
+        });
+        // Reinitialize watcher in main process
+        if (window.electronAPI && window.electronAPI.reinitializeCustomThemeWatcher) {
+          await window.electronAPI.reinitializeCustomThemeWatcher();
+        }
+        // Reload theme if custom is active
+        if (currentTheme === 'custom') {
+          onThemeChange('custom');
+        }
+      }
+    } catch (error) {
+      console.error('Error selecting custom theme file:', error);
     }
   };
 
@@ -96,6 +130,30 @@ function SettingsModal({ isOpen, onClose, currentTheme, onThemeChange, settings,
                 </button>
               ))}
             </div>
+            
+            {/* Custom Theme Path Selector - Only show when Custom theme is selected */}
+            {currentTheme === 'custom' && (
+              <div className="mt-4 pt-4 border-t border-border-light">
+                <h5 className="text-xs font-medium text-text-primary mb-2">Custom Theme File</h5>
+                <p className="text-xs text-text-secondary mb-3">
+                  Select a btop theme file (.theme) to use for the Custom theme. The app will read colors from this file and update in real-time when the file changes. The file format should be: <code className="text-xs bg-bg-accent px-1 rounded">theme[key]=#color</code>
+                </p>
+                <div className="space-y-2">
+                  {customThemePath && (
+                    <div className="px-3 py-2 bg-bg-accent rounded-md">
+                      <p className="text-xs text-text-secondary mb-1">Current file:</p>
+                      <p className="text-xs text-text-primary font-mono break-all">{customThemePath}</p>
+                    </div>
+                  )}
+                  <button
+                    onClick={handleSelectCustomThemeFile}
+                    className="w-full px-4 py-2 bg-accent-primary text-white rounded-md text-sm font-medium hover:bg-opacity-90 transition-colors"
+                  >
+                    {customThemePath ? 'Change Theme File' : 'Select Theme File'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Currency Section */}

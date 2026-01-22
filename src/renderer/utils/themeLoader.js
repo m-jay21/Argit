@@ -5,24 +5,24 @@ let currentTheme = null;
 
 /**
  * Loads a theme and applies it to the document
- * @param {string} themeId - The ID of the theme to load (e.g., 'cozy', 'dark', 'caelestia')
- * @param {Object} dynamicColors - Optional dynamic colors for Caelestia theme
+ * @param {string} themeId - The ID of the theme to load (e.g., 'cozy', 'dark', 'custom')
+ * @param {Object} dynamicColors - Optional dynamic colors for Custom theme
  */
 export async function loadTheme(themeId, dynamicColors = null) {
   let theme = getTheme(themeId);
   
-  // If Caelestia theme, load colors from file or use provided dynamic colors
-  if (themeId === 'caelestia') {
+  // If Custom theme, load colors from file or use provided dynamic colors
+  if (themeId === 'custom') {
     if (dynamicColors) {
       // Use provided dynamic colors
       theme = {
         ...theme,
         colors: mapBtopColorsToTheme(dynamicColors)
       };
-    } else if (window.electronAPI && window.electronAPI.readCaelestiaTheme) {
+    } else if (window.electronAPI && window.electronAPI.readCustomTheme) {
       // Load colors from file via IPC
       try {
-        const btopColors = await window.electronAPI.readCaelestiaTheme();
+        const btopColors = await window.electronAPI.readCustomTheme();
         if (btopColors) {
           theme = {
             ...theme,
@@ -30,7 +30,7 @@ export async function loadTheme(themeId, dynamicColors = null) {
           };
         }
       } catch (error) {
-        console.error('Failed to load Caelestia theme:', error);
+        console.error('Failed to load Custom theme:', error);
       }
     }
   }
@@ -86,11 +86,11 @@ export async function initTheme(themeId = 'cozy') {
 }
 
 /**
- * Updates Caelestia theme with new colors (called when file changes)
+ * Updates Custom theme with new colors (called when file changes)
  * @param {Object} btopColors - Colors from btop theme file
  */
-export function updateCaelestiaTheme(btopColors) {
-  if (currentTheme && currentTheme.id === 'caelestia') {
+export function updateCustomTheme(btopColors) {
+  if (currentTheme && currentTheme.id === 'custom') {
     const updatedTheme = {
       ...currentTheme,
       colors: mapBtopColorsToTheme(btopColors)

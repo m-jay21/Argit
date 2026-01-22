@@ -1,5 +1,5 @@
-// Caelestia Theme - Dynamic theme loaded from btop theme file
-// Colors are populated dynamically from ~/.config/btop/themes/caelestia.theme
+// Custom Theme - Dynamic theme loaded from btop theme file
+// Colors are populated dynamically from a user-selected btop theme file
 
 /**
  * Darken a hex color by mixing it with black
@@ -338,9 +338,9 @@ function hexToRgb(hex) {
 }
 
 // Export default theme (will be updated dynamically)
-export const caelestiaTheme = {
-  name: 'Caelestia',
-  id: 'caelestia',
+export const customTheme = {
+  name: 'Custom',
+  id: 'custom',
   colors: defaultCaelestiaColors,
   boxShadow: {
     'cozy': '0 4px 20px rgba(0,0,0,0.5)',

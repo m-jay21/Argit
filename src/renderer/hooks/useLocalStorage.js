@@ -16,7 +16,8 @@ export function useLocalStorage() {
       payDay: 1,
       lastProcessedPayDay: null,
       savingsPot: 0,
-      transfersFromSavings: 0
+      transfersFromSavings: 0,
+      customThemePath: null
     }
   });
 
@@ -70,7 +71,8 @@ export function useLocalStorage() {
             theme: 'cozy',
             payDay: 1,
             savingsPot: 0,
-            transfersFromSavings: 0
+            transfersFromSavings: 0,
+            customThemePath: null
           }
         });
       } finally {

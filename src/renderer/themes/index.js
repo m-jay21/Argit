@@ -1,15 +1,15 @@
 // Theme registry - export all available themes
 import { cozyTheme } from './cozy';
 import { darkTheme } from './dark';
-import { caelestiaTheme, mapBtopColorsToTheme } from './caelestia';
+import { customTheme, mapBtopColorsToTheme } from './caelestia';
 
 export const themes = {
   cozy: cozyTheme,
   dark: darkTheme,
-  caelestia: caelestiaTheme
+  custom: customTheme
 };
 
-export { cozyTheme, darkTheme, caelestiaTheme, mapBtopColorsToTheme };
+export { cozyTheme, darkTheme, customTheme, mapBtopColorsToTheme };
 
 // Get theme by ID
 export function getTheme(themeId) {

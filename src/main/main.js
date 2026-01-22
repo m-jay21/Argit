@@ -1,16 +1,11 @@
-const { app, BrowserWindow, nativeTheme, ipcMain } = require('electron');
+const { app, BrowserWindow, nativeTheme, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs').promises;
 const fsSync = require('fs');
 const { parseBtopThemeFile } = require('./utils/btopThemeParser');
 
 let mainWindow;
-let caelestiaThemeWatcher = null;
-
-// Caelestia theme file path - using user's home directory
-const CAELESTIA_THEME_PATH = process.env.HOME 
-  ? path.join(process.env.HOME, '.config', 'btop', 'themes', 'caelestia.theme')
-  : path.join(require('os').homedir(), '.config', 'btop', 'themes', 'caelestia.theme');
+let customThemeWatcher = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -44,8 +39,8 @@ function createWindow() {
     mainWindow.webContents.send('theme-changed', theme);
   });
   
-  // Setup Caelestia theme watcher after window is created
-  setupCaelestiaThemeWatcher();
+  // Setup Custom theme watcher after window is created
+  setupCustomThemeWatcher();
 }
 
 app.whenReady().then(() => {
@@ -251,50 +246,112 @@ ipcMain.handle('get-system-theme', () => {
   return nativeTheme.shouldUseDarkColors ? 'dark' : 'light';
 });
 
-// Caelestia theme IPC handlers
-ipcMain.handle('read-caelestia-theme', async () => {
+// Helper function to get custom theme path from settings
+async function getCustomThemePath() {
   try {
-    // Check if file exists
-    try {
-      await fs.access(CAELESTIA_THEME_PATH);
-    } catch {
-      console.warn('Caelestia theme file not found:', CAELESTIA_THEME_PATH);
+    const dataPath = path.join(app.getPath('userData'), 'argit-data.json');
+    const data = await fs.readFile(dataPath, 'utf8');
+    const parsedData = JSON.parse(data);
+    return parsedData?.settings?.customThemePath || null;
+  } catch (error) {
+    return null;
+  }
+}
+
+// Custom theme IPC handlers
+ipcMain.handle('read-custom-theme', async () => {
+  try {
+    const themePath = await getCustomThemePath();
+    if (!themePath) {
       return null;
     }
-    const content = await fs.readFile(CAELESTIA_THEME_PATH, 'utf-8');
+    
+    // Check if file exists
+    try {
+      await fs.access(themePath);
+    } catch {
+      console.warn('Custom theme file not found:', themePath);
+      return null;
+    }
+    const content = await fs.readFile(themePath, 'utf-8');
     return parseBtopThemeFile(content);
   } catch (error) {
-    console.error('Error reading Caelestia theme:', error);
+    console.error('Error reading Custom theme:', error);
     return null;
   }
 });
 
-// Setup file watcher for Caelestia theme
-function setupCaelestiaThemeWatcher() {
-  // Check if file exists
-  fs.access(CAELESTIA_THEME_PATH).then(() => {
-    // File exists, set up watcher
-    if (caelestiaThemeWatcher) {
-      fsSync.unwatchFile(CAELESTIA_THEME_PATH, caelestiaThemeWatcher);
-    }
-    
-    caelestiaThemeWatcher = fsSync.watchFile(CAELESTIA_THEME_PATH, { interval: 1000 }, async (curr, prev) => {
-      if (curr.mtime !== prev.mtime) {
-        // File changed, notify renderer
-        try {
-          const content = await fs.readFile(CAELESTIA_THEME_PATH, 'utf-8');
-          const colors = parseBtopThemeFile(content);
-          if (mainWindow && !mainWindow.isDestroyed() && colors) {
-            mainWindow.webContents.send('caelestia-theme-updated', colors);
-          }
-        } catch (error) {
-          console.error('Error handling Caelestia theme update:', error);
-        }
-      }
+// File dialog for selecting custom theme file
+ipcMain.handle('select-custom-theme-file', async () => {
+  try {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: 'Select btop Theme File',
+      filters: [
+        { name: 'btop Theme Files', extensions: ['theme'] },
+        { name: 'All Files', extensions: ['*'] }
+      ],
+      properties: ['openFile']
     });
     
-    console.log('Caelestia theme watcher initialized');
-  }).catch(() => {
-    console.warn('Caelestia theme file not found, skipping watcher:', CAELESTIA_THEME_PATH);
+    if (result.canceled || result.filePaths.length === 0) {
+      return { success: false, canceled: true };
+    }
+    
+    return { success: true, filePath: result.filePaths[0] };
+  } catch (error) {
+    console.error('Error selecting theme file:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Setup file watcher for Custom theme
+async function setupCustomThemeWatcher() {
+  // Stop existing watcher if any
+  if (customThemeWatcher) {
+    const oldPath = await getCustomThemePath();
+    if (oldPath) {
+      try {
+        fsSync.unwatchFile(oldPath, customThemeWatcher);
+      } catch (e) {
+        // Ignore errors
+      }
+    }
+    customThemeWatcher = null;
+  }
+  
+  const themePath = await getCustomThemePath();
+  if (!themePath) {
+    return;
+  }
+  
+  // Check if file exists
+  try {
+    await fs.access(themePath);
+  } catch {
+    console.warn('Custom theme file not found, skipping watcher:', themePath);
+    return;
+  }
+  
+  customThemeWatcher = fsSync.watchFile(themePath, { interval: 1000 }, async (curr, prev) => {
+    if (curr.mtime !== prev.mtime) {
+      // File changed, notify renderer
+      try {
+        const content = await fs.readFile(themePath, 'utf-8');
+        const colors = parseBtopThemeFile(content);
+        if (mainWindow && !mainWindow.isDestroyed() && colors) {
+          mainWindow.webContents.send('custom-theme-updated', colors);
+        }
+      } catch (error) {
+        console.error('Error handling Custom theme update:', error);
+      }
+    }
   });
+  
+  console.log('Custom theme watcher initialized for:', themePath);
 }
+
+// IPC handler to reinitialize watcher (called when custom theme path changes)
+ipcMain.handle('reinitialize-custom-theme-watcher', async () => {
+  await setupCustomThemeWatcher();
+  return { success: true };
+});

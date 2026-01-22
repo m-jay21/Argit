@@ -13,7 +13,7 @@ import { useLocalStorage } from './hooks/useLocalStorage';
 import { processDueSubscriptions } from './utils/subscriptionHelpers';
 import { calculateBudgetAmounts, calculateCategorySpending } from './utils/budgetHelpers';
 import { processPayDayReset, processMonthEndSurplus, shouldProcessPayDay, shouldProcessMonthEnd } from './utils/monthEndProcessing';
-import { initTheme, loadTheme, updateCaelestiaTheme } from './utils/themeLoader';
+import { initTheme, loadTheme, updateCustomTheme } from './utils/themeLoader';
 
 function App() {
   const [theme, setTheme] = useState('cozy');
@@ -72,29 +72,33 @@ function App() {
       if (!isLoading) {
         const themeId = settings.theme || 'cozy';
         await loadTheme(themeId);
+        // Reinitialize watcher if custom theme is selected
+        if (themeId === 'custom' && window.electronAPI && window.electronAPI.reinitializeCustomThemeWatcher) {
+          await window.electronAPI.reinitializeCustomThemeWatcher();
+        }
       }
     };
     loadThemeAsync();
-  }, [settings.theme, isLoading]);
+  }, [settings.theme, settings.customThemePath, isLoading]);
 
-  // Listen for Caelestia theme updates
+  // Listen for Custom theme updates
   useEffect(() => {
-    if (window.electronAPI && window.electronAPI.onCaelestiaThemeUpdated) {
-      const handleCaelestiaUpdate = (event, btopColors) => {
-        if (settings.theme === 'caelestia' && btopColors) {
-          updateCaelestiaTheme(btopColors);
+    if (window.electronAPI && window.electronAPI.onCustomThemeUpdated) {
+      const handleCustomUpdate = (event, btopColors) => {
+        if (settings.theme === 'custom' && btopColors) {
+          updateCustomTheme(btopColors);
         }
       };
       
-      window.electronAPI.onCaelestiaThemeUpdated(handleCaelestiaUpdate);
+      window.electronAPI.onCustomThemeUpdated(handleCustomUpdate);
       
       return () => {
-        if (window.electronAPI && window.electronAPI.removeCaelestiaThemeListener) {
-          window.electronAPI.removeCaelestiaThemeListener(handleCaelestiaUpdate);
+        if (window.electronAPI && window.electronAPI.removeCustomThemeListener) {
+          window.electronAPI.removeCustomThemeListener(handleCustomUpdate);
         }
       };
     }
-  }, [settings.theme]);
+  }, [settings.theme, settings.customThemePath]);
 
   // System theme handling (for future use)
   useEffect(() => {
@@ -465,6 +469,10 @@ function App() {
             theme: themeId
           };
           await updateSettings(updatedSettings);
+          // Reinitialize watcher if switching to custom theme
+          if (themeId === 'custom' && window.electronAPI && window.electronAPI.reinitializeCustomThemeWatcher) {
+            await window.electronAPI.reinitializeCustomThemeWatcher();
+          }
         }}
         settings={settings}
         onUpdateSettings={updateSettings}
