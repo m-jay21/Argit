@@ -2,7 +2,6 @@
 <a id="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
-[![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
@@ -347,12 +346,6 @@ Don't forget to give the project a star! Thanks again!
 - Test on your target platform before submitting
 - Update documentation if adding features
 
-### Top contributors:
-
-<a href="https://github.com/m-jay21/Argit/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=m-jay21/Argit" alt="contrib.rocks image" />
-</a>
-
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- LICENSE -->
@@ -376,8 +369,6 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/m-jay21/Argit.svg?style=for-the-badge
-[contributors-url]: https://github.com/m-jay21/Argit/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/m-jay21/Argit.svg?style=for-the-badge
 [forks-url]: https://github.com/m-jay21/Argit/network/members
 [stars-shield]: https://img.shields.io/github/stars/m-jay21/Argit.svg?style=for-the-badge
