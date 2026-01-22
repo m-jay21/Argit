@@ -1,15 +1,9 @@
 import React from 'react';
 import { DeleteIcon, NextBillDateIcon, DaysUntilBillIcon } from './icons';
 import { getSubscriptionStatus } from '../utils/subscriptionHelpers';
+import { formatCurrency } from '../utils/calculations';
 
-function SubscriptionList({ subscriptions, onRemoveSubscription, currency = 'AED' }) {
-  const formatCurrency = (amount) => {
-    const formatted = new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount);
-    return `AED ${formatted}`;
-  };
+function SubscriptionList({ subscriptions, onRemoveSubscription, currency = 'USD' }) {
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -40,7 +34,7 @@ function SubscriptionList({ subscriptions, onRemoveSubscription, currency = 'AED
             Total Monthly Cost
           </span>
           <span className="text-lg font-bold text-text-primary">
-            {formatCurrency(totalMonthly)}
+            {formatCurrency(totalMonthly, currency)}
           </span>
         </div>
       </div>
@@ -78,7 +72,7 @@ function SubscriptionList({ subscriptions, onRemoveSubscription, currency = 'AED
               <div className="flex items-center space-x-3">
                 <div className="text-right">
                   <p className="text-sm font-semibold text-text-primary">
-                    {formatCurrency(subscription.amount)}
+                    {formatCurrency(subscription.amount, currency)}
                   </p>
                   <p className="text-xs text-text-secondary">
                     /month

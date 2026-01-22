@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PieChartIcon, SaveChangesIcon, ResetBudgetIcon, PlusIcon, AlertCircleIcon } from './icons';
 import { calculateBudgetAmounts, validateBudgetPercentages, calculateSurplusDistribution } from '../utils/budgetHelpers';
+import { formatCurrency } from '../utils/calculations';
 
 function BudgetAllocation({
   monthlyIncome = 0,
@@ -98,10 +99,6 @@ function BudgetAllocation({
     ? calculateSurplusDistribution(localBudgetConfig)
     : { categorySurplus: 0, originalSavingsAllocation: 0, totalAvailableForSavings: 0 };
 
-  const formatCurrency = (amount) => {
-    const safeAmount = typeof amount === 'number' && !isNaN(amount) ? amount : 0;
-    return `AED ${safeAmount.toFixed(2)}`;
-  };
 
   const getProgressBarColor = (remaining, budget) => {
     if (remaining < 0) return 'bg-red-500';
@@ -120,7 +117,7 @@ function BudgetAllocation({
           <div>
             <h2 className="text-lg font-semibold text-text-primary">Budget Allocation</h2>
             <p className="text-sm text-text-secondary">
-              This Month's Income: {formatCurrency(monthlyIncome)}
+              This Month's Income: {formatCurrency(monthlyIncome, currency)}
             </p>
           </div>
         </div>
@@ -178,10 +175,10 @@ function BudgetAllocation({
                       <span className="text-xs text-text-secondary ml-1">%</span>
                     </td>
                     <td className="py-3">
-                      <span className="text-sm text-text-primary">{formatCurrency(category.budgetAmount)}</span>
+                      <span className="text-sm text-text-primary">{formatCurrency(category.budgetAmount, currency)}</span>
                     </td>
                     <td className="py-3">
-                      <span className="text-sm text-text-primary">{formatCurrency(category.spentAmount)}</span>
+                      <span className="text-sm text-text-primary">{formatCurrency(category.spentAmount, currency)}</span>
                     </td>
                     <td className="py-3">
                       <div className="w-24">
@@ -253,13 +250,13 @@ function BudgetAllocation({
           <div className="flex justify-between items-center text-sm">
             <span className="text-text-secondary">Total Allocated:</span>
             <span className="font-medium text-text-primary">
-              {(validation.totalPercentage || 0).toFixed(1)}% ({formatCurrency((monthlyIncome || 0) * (validation.totalPercentage || 0) / 100)})
+              {(validation.totalPercentage || 0).toFixed(1)}% ({formatCurrency((monthlyIncome || 0) * (validation.totalPercentage || 0) / 100, currency)})
             </span>
           </div>
           <div className="flex justify-between items-center text-sm mt-1">
             <span className="text-text-secondary">Available for Savings:</span>
             <span className={`font-medium ${(validation.availableForSavings || 0) >= 1 ? 'text-green-600' : 'text-red-600'}`}>
-              {(validation.availableForSavings || 0).toFixed(1)}% ({formatCurrency((monthlyIncome || 0) * (validation.availableForSavings || 0) / 100)})
+              {(validation.availableForSavings || 0).toFixed(1)}% ({formatCurrency((monthlyIncome || 0) * (validation.availableForSavings || 0) / 100, currency)})
             </span>
           </div>
         </div>

@@ -1,14 +1,8 @@
 import React from 'react';
 import { QuickOverviewIcon, TrendingUpIcon, TrendingDownIcon, SubscriptionsStatIcon, NetIncomeIcon } from './icons';
+import { formatCurrency } from '../utils/calculations';
 
-function MonthlyStats({ transactions, subscriptions, currency = 'AED' }) {
-  const formatCurrency = (amount) => {
-    const formatted = new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount);
-    return `AED ${formatted}`;
-  };
+function MonthlyStats({ transactions, subscriptions, currency = 'USD' }) {
 
   // Calculate current month stats
   const currentMonth = new Date().getMonth();
@@ -71,13 +65,13 @@ function MonthlyStats({ transactions, subscriptions, currency = 'AED' }) {
       </div>
       <div className="flex flex-wrap gap-2">
         <span className="bg-accent-secondary text-white px-2 py-1 rounded-xl text-xs font-medium">
-          monthly income: {formatCurrency(monthlyIncome)}
+          monthly income: {formatCurrency(monthlyIncome, currency)}
         </span>
         <span className="bg-accent-secondary text-white px-2 py-1 rounded-xl text-xs font-medium">
-          expenses: {formatCurrency(monthlyExpenses)}
+          expenses: {formatCurrency(monthlyExpenses, currency)}
         </span>
         <span className="bg-accent-secondary text-white px-2 py-1 rounded-xl text-xs font-medium">
-          remaining: {formatCurrency(netIncome)}
+          remaining: {formatCurrency(netIncome, currency)}
         </span>
       </div>
     </div>

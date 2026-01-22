@@ -46,7 +46,7 @@ export function useLocalStorage() {
           savingsGoals: loadedData?.savingsGoals || [],
           settings: {
             startingBalance: 0,
-            currency: 'AED',
+            currency: 'USD',
             theme: 'cozy',
             payDay: 1,
             savingsPot: 0,
@@ -66,7 +66,7 @@ export function useLocalStorage() {
           savingsGoals: [],
           settings: {
             startingBalance: 0,
-            currency: 'AED',
+            currency: 'USD',
             theme: 'cozy',
             payDay: 1,
             savingsPot: 0,

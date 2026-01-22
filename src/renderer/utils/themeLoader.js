@@ -5,7 +5,7 @@ let currentTheme = null;
 
 /**
  * Loads a theme and applies it to the document
- * @param {string} themeId - The ID of the theme to load (e.g., 'cozy', 'dark', 'light', 'caelestia')
+ * @param {string} themeId - The ID of the theme to load (e.g., 'cozy', 'dark', 'caelestia')
  * @param {Object} dynamicColors - Optional dynamic colors for Caelestia theme
  */
 export async function loadTheme(themeId, dynamicColors = null) {

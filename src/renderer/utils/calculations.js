@@ -1,12 +1,12 @@
 // Helper functions for financial calculations
 
-export function formatCurrency(amount, currency = 'AED') {
-  // Custom format to ensure AED shows correctly
-  const formatted = new Intl.NumberFormat('en-US', {
+export function formatCurrency(amount, currency = 'USD') {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(amount);
-  return `AED ${formatted}`;
 }
 
 export function calculateBalance(transactions, startingBalance = 0) {

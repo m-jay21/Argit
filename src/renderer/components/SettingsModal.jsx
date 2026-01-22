@@ -4,12 +4,19 @@ import { getAllThemes } from '../themes';
 
 function SettingsModal({ isOpen, onClose, currentTheme, onThemeChange, settings, onUpdateSettings }) {
   const [payDay, setPayDay] = useState(settings?.payDay || 1);
+  const [currency, setCurrency] = useState(settings?.currency || 'USD');
   
   useEffect(() => {
     if (settings?.payDay !== undefined) {
       setPayDay(settings.payDay);
     }
   }, [settings?.payDay]);
+
+  useEffect(() => {
+    if (settings?.currency !== undefined) {
+      setCurrency(settings.currency);
+    }
+  }, [settings?.currency]);
 
   if (!isOpen) return null;
 
@@ -31,6 +38,17 @@ function SettingsModal({ isOpen, onClose, currentTheme, onThemeChange, settings,
       await onUpdateSettings({
         ...settings,
         payDay: payDay
+      });
+    }
+  };
+
+  const handleCurrencyChange = async (e) => {
+    const newCurrency = e.target.value;
+    setCurrency(newCurrency);
+    if (onUpdateSettings) {
+      await onUpdateSettings({
+        ...settings,
+        currency: newCurrency
       });
     }
   };
@@ -78,6 +96,30 @@ function SettingsModal({ isOpen, onClose, currentTheme, onThemeChange, settings,
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Currency Section */}
+          <div>
+            <h4 className="text-sm font-medium text-text-primary mb-1">Currency</h4>
+            <p className="text-xs text-text-secondary mb-3">
+              Change the currency symbol displayed throughout the app. This only affects the display format, not the actual values.
+            </p>
+            <select
+              value={currency}
+              onChange={handleCurrencyChange}
+              className="w-full px-3 py-2 bg-bg-secondary text-text-primary border border-border-input rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-accent-primary"
+            >
+              <option value="USD">USD - US Dollar ($)</option>
+              <option value="EUR">EUR - Euro (€)</option>
+              <option value="GBP">GBP - British Pound (£)</option>
+              <option value="AED">AED - UAE Dirham (د.إ)</option>
+              <option value="JPY">JPY - Japanese Yen (¥)</option>
+              <option value="CAD">CAD - Canadian Dollar (C$)</option>
+              <option value="AUD">AUD - Australian Dollar (A$)</option>
+              <option value="CHF">CHF - Swiss Franc (CHF)</option>
+              <option value="CNY">CNY - Chinese Yuan (¥)</option>
+              <option value="INR">INR - Indian Rupee (₹)</option>
+            </select>
           </div>
 
           {/* Pay Day Section */}

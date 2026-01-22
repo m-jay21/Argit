@@ -16,7 +16,7 @@ import { processPayDayReset, processMonthEndSurplus, shouldProcessPayDay, should
 import { initTheme, loadTheme, updateCaelestiaTheme } from './utils/themeLoader';
 
 function App() {
-  const [theme, setTheme] = useState('light');
+  const [theme, setTheme] = useState('cozy');
   const [currentBalance, setCurrentBalance] = useState(0);
   const [processedPayments, setProcessedPayments] = useState([]);
   const [showPaymentNotification, setShowPaymentNotification] = useState(false);
@@ -445,7 +445,7 @@ function App() {
             onUpdateBudgetConfig={updateBudgetConfig}
             onUpdateSavingsGoals={updateSavingsGoals}
             onAddTransaction={addTransaction}
-            currency={settings?.currency || 'AED'}
+            currency={settings?.currency || 'USD'}
             currentBalance={currentBalance}
             settings={settings || {}}
             onUpdateSettings={updateSettings}

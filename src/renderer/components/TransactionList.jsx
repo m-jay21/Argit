@@ -1,14 +1,8 @@
 import React from 'react';
 import { DeleteIcon, ArrowUpCircleIcon, ArrowDownCircleIcon } from './icons';
+import { formatCurrency } from '../utils/calculations';
 
-function TransactionList({ transactions, onRemoveTransaction, currency = 'AED' }) {
-  const formatCurrency = (amount) => {
-    const formatted = new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount);
-    return `AED ${formatted}`;
-  };
+function TransactionList({ transactions, onRemoveTransaction, currency = 'USD' }) {
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -82,7 +76,7 @@ function TransactionList({ transactions, onRemoveTransaction, currency = 'AED' }
               <p className={`text-sm font-semibold ${
                 transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
               }`}>
-                {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount, currency)}
               </p>
             </div>
           </div>

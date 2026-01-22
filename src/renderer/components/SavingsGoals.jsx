@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { AvailableForGoalsIcon, PlusIcon, EditIcon, MarkCompleteIcon, DeleteIcon, DollarSignIcon, TargetIcon, XIcon, AddIncomeIcon, FromSavingsIcon } from './icons';
 import { calculateGoalProgress, getNextGoalId } from '../utils/budgetHelpers';
 import { getAvailableSavingsFromPot } from '../utils/monthEndProcessing';
+import { formatCurrency } from '../utils/calculations';
 
 function SavingsGoals({
   savingsGoals,
@@ -38,10 +39,6 @@ function SavingsGoals({
     return getAvailableSavingsFromPot(settings, budgetConfig, monthlyIncome, currentBalance);
   }, [settings.savingsPot, settings, budgetConfig, monthlyIncome, currentBalance]);
 
-  const formatCurrency = (amount) => {
-    const safeAmount = typeof amount === 'number' && !isNaN(amount) ? amount : 0;
-    return `AED ${safeAmount.toFixed(2)}`;
-  };
 
   const handleAddGoal = () => {
     const targetAmount = parseFloat(goalForm.targetAmount);
@@ -191,14 +188,14 @@ function SavingsGoals({
     if (mode === 'add') {
       // VALIDATION: Check if there's enough savings money
       if (amount > availableForSavings) {
-        alert(`Insufficient savings! You only have ${formatCurrency(availableForSavings)} available in your savings pot, but trying to add ${formatCurrency(amount)}.`);
+        alert(`Insufficient savings! You only have ${formatCurrency(availableForSavings, currency)} available in your savings pot, but trying to add ${formatCurrency(amount, currency)}.`);
         return;
       }
 
       // Check if adding this amount would exceed the target
       if (goal.currentAmount + amount > goal.targetAmount) {
         const excess = (goal.currentAmount + amount) - goal.targetAmount;
-        if (!window.confirm(`Adding ${formatCurrency(amount)} would exceed the target by ${formatCurrency(excess)}. Continue anyway?`)) {
+        if (!window.confirm(`Adding ${formatCurrency(amount, currency)} would exceed the target by ${formatCurrency(excess, currency)}. Continue anyway?`)) {
           return;
         }
     }
@@ -237,7 +234,7 @@ function SavingsGoals({
       await onUpdateSavingsGoals(updatedGoals);
     } else if (mode === 'remove') {
       if (amount > goal.currentAmount) {
-        alert(`Cannot remove more than what's in the bucket! Current amount: ${formatCurrency(goal.currentAmount)}`);
+        alert(`Cannot remove more than what's in the bucket! Current amount: ${formatCurrency(goal.currentAmount, currency)}`);
         return;
       }
 
@@ -304,11 +301,11 @@ function SavingsGoals({
             <div>
               <p className="text-sm text-text-secondary">Available in Savings Pot</p>
               <p className="text-xl font-semibold text-text-primary">
-                {formatCurrency(availableForSavings)}
+                {formatCurrency(availableForSavings, currency)}
               </p>
               {settings.savingsPot > 0 && (
                 <div className="text-xs text-text-secondary mt-1">
-                  <p>• Total Savings Pot: {formatCurrency(settings.savingsPot)}</p>
+                  <p>• Total Savings Pot: {formatCurrency(settings.savingsPot, currency)}</p>
                 </div>
               )}
             </div>
@@ -406,7 +403,7 @@ function SavingsGoals({
                       {goal.name}
                     </h3>
                     <span className="text-lg font-bold text-accent-primary">
-                      {formatCurrency(goal.currentAmount)}/{formatCurrency(goal.targetAmount)}
+                      {formatCurrency(goal.currentAmount, currency)}/{formatCurrency(goal.targetAmount, currency)}
                     </span>
                   </div>
                   {goal.description && (
@@ -467,7 +464,7 @@ function SavingsGoals({
                 </div>
                 <div className="flex justify-between text-sm text-text-secondary mt-1">
                   <span>{progress.progress.toFixed(1)}% complete</span>
-                  <span>{formatCurrency(progress.remainingAmount)} remaining</span>
+                  <span>{formatCurrency(progress.remainingAmount, currency)} remaining</span>
                 </div>
               </div>
             </div>
@@ -491,7 +488,7 @@ function SavingsGoals({
             {savingsGoals.filter(goal => !goal.isActive).map((goal) => (
               <div key={goal.id} className="flex items-center justify-between p-2 bg-green-50 rounded">
                 <span className="text-text-primary font-medium">{goal.name}</span>
-                <span className="text-green-600 font-semibold">{formatCurrency(goal.targetAmount)}</span>
+                <span className="text-green-600 font-semibold">{formatCurrency(goal.targetAmount, currency)}</span>
               </div>
             ))}
           </div>
@@ -529,15 +526,15 @@ function SavingsGoals({
                     <div className="bg-bg-primary p-3 rounded-lg space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-text-secondary">Available in savings pot:</span>
-                        <span className="font-semibold text-text-primary">{formatCurrency(availableForSavings)}</span>
+                        <span className="font-semibold text-text-primary">{formatCurrency(availableForSavings, currency)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-text-secondary">Current in bucket:</span>
-                        <span className="font-semibold text-text-primary">{formatCurrency(goal.currentAmount)}</span>
+                        <span className="font-semibold text-text-primary">{formatCurrency(goal.currentAmount, currency)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-text-secondary">Target:</span>
-                        <span className="font-semibold text-text-primary">{formatCurrency(goal.targetAmount)}</span>
+                        <span className="font-semibold text-text-primary">{formatCurrency(goal.targetAmount, currency)}</span>
                       </div>
                     </div>
                   </>
@@ -545,7 +542,7 @@ function SavingsGoals({
                   <div className="bg-bg-primary p-3 rounded-lg space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-text-secondary">Current in bucket:</span>
-                      <span className="font-semibold text-text-primary">{formatCurrency(goal.currentAmount)}</span>
+                      <span className="font-semibold text-text-primary">{formatCurrency(goal.currentAmount, currency)}</span>
                     </div>
                     <div className="text-xs text-text-secondary mt-2">
                       Money will be returned to your savings pot
@@ -639,7 +636,7 @@ function SavingsGoals({
                   <div className="bg-bg-primary p-3 rounded-lg space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-text-secondary">Current in bucket:</span>
-                      <span className="font-semibold text-text-primary">{formatCurrency(goal.currentAmount)}</span>
+                      <span className="font-semibold text-text-primary">{formatCurrency(goal.currentAmount, currency)}</span>
                     </div>
                     <div className="text-xs text-text-secondary mt-2">
                       This amount will be returned to your savings pot

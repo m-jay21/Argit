@@ -1,6 +1,6 @@
 {
   "name": "argit",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "description": "Argit - A desktop personal finance tracking application for Linux",
   "main": "src/main/main.js",
   "homepage": "./",
@@ -60,7 +60,8 @@
         "Icon": "argit",
         "StartupWMClass": "argit",
         "Type": "Application",
-        "Terminal": false
+        "Terminal": false,
+        "StartupNotify": true
       }
     },
     "win": {
