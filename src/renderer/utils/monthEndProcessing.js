@@ -49,9 +49,9 @@ export function shouldProcessPayDay(payDay, lastProcessedPayDay) {
     return false;
   }
   
-  // If we haven't processed any pay day yet, process it
+  // If we haven't processed any pay day yet, only process if today is on or after pay day
   if (!lastProcessedPayDay) {
-    return true;
+    return today >= targetDate;
   }
   
   // Check if we've already processed this pay day period
