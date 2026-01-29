@@ -149,13 +149,15 @@ function TransactionForm({ onAddTransaction, availableCategories = [], settings 
 
             try {
               // Create expense transaction using selected category (counts towards budget)
+              // Mark as fromSavings so it doesn't affect balance calculation
               const transaction = {
                 ...formData,
                 type: 'expense',
                 amount,
                 description: formData.description || 'Spent from Savings',
                 date: formData.date || new Date().toISOString().split('T')[0],
-                category: formData.category || 'Savings'
+                category: formData.category || 'Savings',
+                fromSavings: true
               };
 
               // Add the transaction first

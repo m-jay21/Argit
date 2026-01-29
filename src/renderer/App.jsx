@@ -34,7 +34,7 @@ function App() {
       .reduce((sum, t) => sum + t.amount, 0);
 
     const totalExpenses = transactions
-      .filter(t => t.type === 'expense')
+      .filter(t => t.type === 'expense' && !t.fromSavings) // Exclude fromSavings transactions from balance
       .reduce((sum, t) => sum + t.amount, 0);
 
     const newBalance = settings.startingBalance + totalIncome - totalExpenses;
@@ -174,24 +174,24 @@ function App() {
         }
       } else {
         // Legacy month-based processing
-        if (shouldProcessMonthEnd(settings.lastProcessedMonth)) {
-          processMonthEndSurplus(
-            budgetConfig,
-            transactions,
-            settings,
-            updateTransactions,
-            updateSettings
-          ).then(result => {
-            if (result.processed) {
-              console.log('Month-end processing:', result.message);
-              if (result.backupCreated) {
-                console.log('Transaction backup saved to:', result.backupPath);
-              }
-              // Could show a notification here about surplus added to savings and backup created
+      if (shouldProcessMonthEnd(settings.lastProcessedMonth)) {
+        processMonthEndSurplus(
+          budgetConfig,
+          transactions,
+          settings,
+          updateTransactions,
+          updateSettings
+        ).then(result => {
+          if (result.processed) {
+            console.log('Month-end processing:', result.message);
+            if (result.backupCreated) {
+              console.log('Transaction backup saved to:', result.backupPath);
             }
-          }).catch(error => {
-            console.error('Month-end processing failed:', error);
-          });
+            // Could show a notification here about surplus added to savings and backup created
+          }
+        }).catch(error => {
+          console.error('Month-end processing failed:', error);
+        });
         }
       }
     }
