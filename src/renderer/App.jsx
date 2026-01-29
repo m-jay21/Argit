@@ -476,6 +476,12 @@ function App() {
         }}
         settings={settings}
         onUpdateSettings={updateSettings}
+        onResetAllData={{
+          updateTransactions,
+          updateSubscriptions,
+          updateBudgetConfig,
+          updateSavingsGoals
+        }}
       />
     </div>
   );

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { XIcon, SettingsIcon } from './icons';
 import { getAllThemes } from '../themes';
+import { createDefaultBudgetConfig } from '../utils/budgetHelpers';
 
-function SettingsModal({ isOpen, onClose, currentTheme, onThemeChange, settings, onUpdateSettings }) {
+function SettingsModal({ isOpen, onClose, currentTheme, onThemeChange, settings, onUpdateSettings, onResetAllData }) {
   const [payDay, setPayDay] = useState(settings?.payDay || 1);
   const [currency, setCurrency] = useState(settings?.currency || 'USD');
   const [customThemePath, setCustomThemePath] = useState(settings?.customThemePath || null);
@@ -84,6 +85,62 @@ function SettingsModal({ isOpen, onClose, currentTheme, onThemeChange, settings,
       }
     } catch (error) {
       console.error('Error selecting custom theme file:', error);
+    }
+  };
+
+  const handleFreshStart = async () => {
+    // Confirmation dialog
+    const confirmed = window.confirm(
+      'Are you sure you want to reset everything?\n\n' +
+      'This will:\n' +
+      '• Clear all transactions\n' +
+      '• Clear all subscriptions\n' +
+      '• Reset budget to default configuration\n' +
+      '• Clear all savings goals\n' +
+      '• Reset balance and savings pot to 0\n' +
+      '• Clear pay day processing history\n\n' +
+      'Your theme, currency, and pay day settings will be preserved.\n\n' +
+      'This action cannot be undone!'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      if (!onResetAllData) {
+        alert('Reset functionality not available');
+        return;
+      }
+
+      // Clear all transactions
+      await onResetAllData.updateTransactions([]);
+
+      // Clear all subscriptions
+      await onResetAllData.updateSubscriptions([]);
+
+      // Reset budget config to default (fresh start)
+      const defaultBudgetConfig = createDefaultBudgetConfig();
+      await onResetAllData.updateBudgetConfig(defaultBudgetConfig);
+
+      // Clear all savings goals
+      await onResetAllData.updateSavingsGoals([]);
+
+      // Reset settings - preserve theme, currency, payDay, customThemePath
+      await onUpdateSettings({
+        ...settings,
+        startingBalance: 0,
+        savingsPot: 0,
+        lastProcessedPayDay: null,
+        lastProcessedMonth: null,
+        transfersFromSavings: 0
+      });
+
+      alert('Fresh start complete! All data has been reset.');
+      onClose();
+    } catch (error) {
+      console.error('Error resetting data:', error);
+      alert('Failed to reset data. Please try again.');
     }
   };
 
@@ -201,6 +258,20 @@ function SettingsModal({ isOpen, onClose, currentTheme, onThemeChange, settings,
                 className="flex-1 px-3 py-2 bg-bg-secondary text-text-primary border border-border-input rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-accent-primary"
               />
             </div>
+          </div>
+
+          {/* Fresh Start Section */}
+          <div className="pt-4 border-t border-border-light">
+            <h4 className="text-sm font-medium text-text-primary mb-1">Fresh Start</h4>
+            <p className="text-xs text-text-secondary mb-3">
+              Reset all your financial data to start fresh. This will clear all transactions, subscriptions, savings goals, and reset your balance to zero. Your theme, currency, and pay day settings will be preserved.
+            </p>
+            <button
+              onClick={handleFreshStart}
+              className="w-full px-4 py-2 bg-error-color text-white rounded-md text-sm font-medium hover:bg-opacity-90 transition-colors"
+            >
+              Reset Everything
+            </button>
           </div>
         </div>
 
