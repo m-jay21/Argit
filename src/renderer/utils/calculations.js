@@ -1,5 +1,16 @@
 // Helper functions for financial calculations
 
+/** Returns ordinal suffix for day of month (e.g. 15 -> "15th", 1 -> "1st") */
+export function getOrdinalDay(n) {
+  if (typeof n !== 'number' || n < 1 || n > 31) return String(n);
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${n}st`;
+  if (mod10 === 2 && mod100 !== 12) return `${n}nd`;
+  if (mod10 === 3 && mod100 !== 13) return `${n}rd`;
+  return `${n}th`;
+}
+
 export function formatCurrency(amount, currency = 'USD') {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',

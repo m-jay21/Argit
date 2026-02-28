@@ -1,8 +1,8 @@
 import React from 'react';
 import { QuickOverviewIcon, TrendingUpIcon, TrendingDownIcon, SubscriptionsStatIcon, NetIncomeIcon } from './icons';
-import { formatCurrency } from '../utils/calculations';
+import { formatCurrency, getOrdinalDay } from '../utils/calculations';
 
-function MonthlyStats({ transactions, subscriptions, currency = 'USD' }) {
+function MonthlyStats({ transactions, subscriptions, currency = 'USD', payDay }) {
 
   // Calculate current month stats
   const currentMonth = new Date().getMonth();
@@ -74,6 +74,11 @@ function MonthlyStats({ transactions, subscriptions, currency = 'USD' }) {
           remaining: {formatCurrency(netIncome, currency)}
         </span>
       </div>
+      {payDay != null && payDay >= 1 && payDay <= 31 && (
+        <p className="text-xs text-text-secondary mt-2" role="status">
+          Balance resets on the {getOrdinalDay(payDay)} of each month.
+        </p>
+      )}
     </div>
   );
 }

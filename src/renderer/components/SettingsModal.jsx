@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { XIcon, SettingsIcon } from './icons';
 import { getAllThemes } from '../themes';
 import { createDefaultBudgetConfig } from '../utils/budgetHelpers';
+import { getOrdinalDay } from '../utils/calculations';
 
 function SettingsModal({ isOpen, onClose, currentTheme, onThemeChange, settings, onUpdateSettings, onResetAllData }) {
   const [payDay, setPayDay] = useState(settings?.payDay || 1);
@@ -48,6 +49,18 @@ function SettingsModal({ isOpen, onClose, currentTheme, onThemeChange, settings,
         payDay: payDay
       });
     }
+  };
+
+  const handleDone = async () => {
+    if (onUpdateSettings) {
+      await onUpdateSettings({
+        ...settings,
+        payDay: payDay >= 1 && payDay <= 31 ? payDay : settings?.payDay ?? 1,
+        currency,
+        customThemePath: customThemePath ?? settings?.customThemePath ?? null
+      });
+    }
+    onClose();
   };
 
   const handleCurrencyChange = async (e) => {
@@ -258,6 +271,11 @@ function SettingsModal({ isOpen, onClose, currentTheme, onThemeChange, settings,
                 className="flex-1 px-3 py-2 bg-bg-secondary text-text-primary border border-border-input rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-accent-primary"
               />
             </div>
+            {payDay >= 1 && payDay <= 31 && (
+              <p className="text-xs text-accent-primary mt-2 font-medium" role="status">
+                Balance will reset on the {getOrdinalDay(payDay)} of each month.
+              </p>
+            )}
           </div>
 
           {/* Fresh Start Section */}
@@ -278,7 +296,7 @@ function SettingsModal({ isOpen, onClose, currentTheme, onThemeChange, settings,
         {/* Modal Footer */}
         <div className="mt-6 flex justify-end">
           <button
-            onClick={onClose}
+            onClick={handleDone}
             className="px-4 py-2 bg-accent-primary text-white rounded-lg text-sm font-medium hover:bg-opacity-90 transition-colors"
           >
             Done

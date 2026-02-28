@@ -336,7 +336,7 @@ function App() {
           {activeTab === 'overview' && (
             <>
               {/* Quick Overview */}
-              <MonthlyStats transactions={transactions} subscriptions={subscriptions} currency={settings.currency} />
+              <MonthlyStats transactions={transactions} subscriptions={subscriptions} currency={settings.currency} payDay={settings.payDay} />
 
               {/* Main Grid Layout */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 my-5">
