@@ -1,4 +1,5 @@
 // Helper functions for financial calculations
+import { getPayPeriodRange } from './dateHelpers';
 
 /** Returns ordinal suffix for day of month (e.g. 15 -> "15th", 1 -> "1st") */
 export function getOrdinalDay(n) {
@@ -32,15 +33,37 @@ export function calculateBalance(transactions, startingBalance = 0) {
   return startingBalance + totalIncome - totalExpenses;
 }
 
-export function getMonthlyStats(transactions) {
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
+/**
+ * Get transactions that fall in the current period (calendar month, or pay period when payDay is set).
+ * @param {Array} transactions
+ * @param {number|null|undefined} payDay - If 1-31, use pay period (e.g. 15th to 14th); otherwise calendar month
+ */
+export function getMonthlyStats(transactions, payDay) {
+  let periodTransactions;
 
-  const currentMonthTransactions = transactions.filter(transaction => {
-    const transactionDate = new Date(transaction.date);
-    return transactionDate.getMonth() === currentMonth &&
-           transactionDate.getFullYear() === currentYear;
-  });
+  if (payDay != null && payDay >= 1 && payDay <= 31) {
+    const range = getPayPeriodRange(payDay);
+    if (range) {
+      periodTransactions = (transactions || []).filter(transaction => {
+        const d = new Date(transaction.date);
+        const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        dayStart.setHours(0, 0, 0, 0);
+        return dayStart >= range.start && dayStart <= range.end;
+      });
+    } else {
+      periodTransactions = [];
+    }
+  } else {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    periodTransactions = (transactions || []).filter(transaction => {
+      const transactionDate = new Date(transaction.date);
+      return transactionDate.getMonth() === currentMonth &&
+             transactionDate.getFullYear() === currentYear;
+    });
+  }
+
+  const currentMonthTransactions = periodTransactions;
 
   const monthlyIncome = currentMonthTransactions
     .filter(t => t.type === 'income')

@@ -1,30 +1,16 @@
 import React from 'react';
 import { QuickOverviewIcon, TrendingUpIcon, TrendingDownIcon, SubscriptionsStatIcon, NetIncomeIcon } from './icons';
-import { formatCurrency, getOrdinalDay } from '../utils/calculations';
+import { formatCurrency, getOrdinalDay, getMonthlyStats } from '../utils/calculations';
 
 function MonthlyStats({ transactions, subscriptions, currency = 'USD', payDay }) {
 
-  // Calculate current month stats
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
+  // Use pay period when payDay is set, otherwise calendar month
+  const periodStats = getMonthlyStats(transactions || [], payDay);
+  const monthlyIncome = periodStats.income;
+  const monthlyExpenses = periodStats.expenses;
+  const netIncome = periodStats.net;
 
-  const currentMonthTransactions = transactions.filter(transaction => {
-    const transactionDate = new Date(transaction.date);
-    return transactionDate.getMonth() === currentMonth &&
-           transactionDate.getFullYear() === currentYear;
-  });
-
-  const monthlyIncome = currentMonthTransactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const monthlyExpenses = currentMonthTransactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const netIncome = monthlyIncome - monthlyExpenses;
-
-  const totalSubscriptions = subscriptions.reduce((sum, sub) => sum + sub.amount, 0);
+  const totalSubscriptions = (subscriptions || []).reduce((sum, sub) => sum + sub.amount, 0);
 
   const stats = [
     {

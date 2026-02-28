@@ -1,4 +1,5 @@
 // Budget calculation and management utilities
+import { getPayPeriodRange } from './dateHelpers';
 
 export const DEFAULT_CATEGORIES = [
   { name: 'Food' },
@@ -57,7 +58,12 @@ export function calculateBudgetAmounts(budgetConfig, monthlyIncome) {
   };
 }
 
-export function calculateCategorySpending(budgetConfig, transactions) {
+/**
+ * @param {object} budgetConfig
+ * @param {Array} transactions
+ * @param {number|null|undefined} payDay - If 1-31, filter by pay period; otherwise calendar month
+ */
+export function calculateCategorySpending(budgetConfig, transactions, payDay) {
   if (!budgetConfig || !budgetConfig.categories || !Array.isArray(budgetConfig.categories)) {
     return budgetConfig || createDefaultBudgetConfig();
   }
@@ -66,16 +72,34 @@ export function calculateCategorySpending(budgetConfig, transactions) {
     return budgetConfig;
   }
 
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
+  let periodExpenses;
 
-  // Filter transactions for current month expenses only
-  const currentMonthExpenses = transactions.filter(transaction => {
-    const transactionDate = new Date(transaction.date);
-    return transaction.type === 'expense' &&
-           transactionDate.getMonth() === currentMonth &&
-           transactionDate.getFullYear() === currentYear;
-  });
+  if (payDay != null && payDay >= 1 && payDay <= 31) {
+    const range = getPayPeriodRange(payDay);
+    if (range) {
+      periodExpenses = transactions.filter(transaction => {
+        const d = new Date(transaction.date);
+        const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        dayStart.setHours(0, 0, 0, 0);
+        return transaction.type === 'expense' &&
+               dayStart >= range.start &&
+               dayStart <= range.end;
+      });
+    } else {
+      periodExpenses = [];
+    }
+  } else {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    periodExpenses = transactions.filter(transaction => {
+      const transactionDate = new Date(transaction.date);
+      return transaction.type === 'expense' &&
+             transactionDate.getMonth() === currentMonth &&
+             transactionDate.getFullYear() === currentYear;
+    });
+  }
+
+  const currentMonthExpenses = periodExpenses;
 
   // Calculate spending by category
   const spendingByCategory = {};

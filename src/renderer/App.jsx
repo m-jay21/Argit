@@ -44,7 +44,7 @@ function App() {
   // Update budget spending when transactions change
   useEffect(() => {
     if (!isLoading && budgetConfig && budgetConfig.categories && Array.isArray(budgetConfig.categories) && transactions) {
-      const updatedBudgetConfig = calculateCategorySpending(budgetConfig, transactions);
+      const updatedBudgetConfig = calculateCategorySpending(budgetConfig, transactions, settings?.payDay);
       // Only update if the spending amounts actually changed, not the lastUpdated timestamp
       const hasSpendingChanged = budgetConfig.categories.some((cat, index) => {
         const newCat = updatedBudgetConfig.categories[index];
@@ -55,7 +55,7 @@ function App() {
         updateBudgetConfig(updatedBudgetConfig);
       }
     }
-  }, [transactions, isLoading]); // Removed budgetConfig from dependencies to prevent loop
+  }, [transactions, isLoading, settings?.payDay]); // Removed budgetConfig from dependencies to prevent loop
 
   // Initialize theme system on mount
   useEffect(() => {

@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { ManageCategoriesIcon, EditIcon, DeleteIcon, PlusIcon, SaveIcon, XIcon, HelpTextIcon } from './icons';
 import { canDeleteCategory, PROTECTED_CATEGORIES } from '../utils/budgetHelpers';
+import { isDateInPayPeriod } from '../utils/dateHelpers';
 
 function CategoryManagement({
   budgetConfig,
   transactions,
-  onUpdateBudgetConfig
+  onUpdateBudgetConfig,
+  payDay
 }) {
   const [editingCategory, setEditingCategory] = useState(null);
   const [editName, setEditName] = useState('');
@@ -87,9 +89,15 @@ function CategoryManagement({
   };
 
   const getTransactionCount = (categoryName) => {
+    if (!transactions || !Array.isArray(transactions)) return 0;
+    if (payDay != null && payDay >= 1 && payDay <= 31) {
+      return transactions.filter(transaction =>
+        transaction.category === categoryName &&
+        isDateInPayPeriod(transaction.date, payDay)
+      ).length;
+    }
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
-
     return transactions.filter(transaction => {
       const transactionDate = new Date(transaction.date);
       return transaction.category === categoryName &&

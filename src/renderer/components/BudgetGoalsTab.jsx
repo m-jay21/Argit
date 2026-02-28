@@ -20,12 +20,13 @@ function BudgetGoalsTab({
   const [activeSection, setActiveSection] = useState('budget');
   const [monthlyIncome, setMonthlyIncome] = useState(0);
 
-  // Calculate monthly income from transactions (available for budget after savings deposits)
+  // Calculate monthly income from transactions (pay period when payDay set, else calendar month)
   useEffect(() => {
-    const stats = getMonthlyStats(transactions);
+    const payDay = settings?.payDay;
+    const stats = getMonthlyStats(transactions || [], payDay);
     // Use availableIncomeForBudget instead of total income (subtracts savings deposits)
     setMonthlyIncome(stats.availableIncomeForBudget || stats.income);
-  }, [transactions]);
+  }, [transactions, settings?.payDay]);
 
   // Show loading if essential data is missing
   if (!budgetConfig || !Array.isArray(budgetConfig.categories)) {
@@ -133,6 +134,7 @@ function BudgetGoalsTab({
           budgetConfig={budgetConfig}
           transactions={transactions}
           onUpdateBudgetConfig={onUpdateBudgetConfig}
+          payDay={settings?.payDay}
         />
       )}
     </div>
