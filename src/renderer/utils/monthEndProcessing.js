@@ -182,8 +182,9 @@ export function processPayDayReset(budgetConfig, transactions, settings, updateT
         }
       }
       
-      // The entire remaining balance becomes the new savings pot
-      const newSavingsPot = currentBalance;
+      // Add current balance to existing savings pot (do not clear existing savings)
+      const existingSavingsPot = settings.savingsPot || 0;
+      const newSavingsPot = existingSavingsPot + currentBalance;
       
       // Get the target pay day date for tracking
       const targetPayDayDate = getTargetPayDayDate(payDay);
@@ -221,7 +222,7 @@ export function processPayDayReset(budgetConfig, transactions, settings, updateT
         newSavingsPot: newSavingsPot,
         prevMonth: surplusData.prevMonth,
         unspentByCategory: surplusData.unspentByCategory,
-        message: `Balance reset on ${payDayDisplay}. ${newSavingsPot.toFixed(2)} AED transferred to savings pot. All transactions cleared.`,
+        message: `Balance reset on ${payDayDisplay}. ${currentBalance.toFixed(2)} AED added to savings pot (total: ${newSavingsPot.toFixed(2)} AED). All transactions cleared.`,
         transactionsCleared: true,
         backupCreated: backupResult ? backupResult.success : false,
         backupPath: backupResult ? backupResult.filePath : null
@@ -274,8 +275,9 @@ export function processMonthEndSurplus(budgetConfig, transactions, settings, upd
         }
       }
       
-      // The entire remaining balance becomes the new savings pot
-      const newSavingsPot = currentBalance;
+      // Add current balance to existing savings pot (do not clear existing savings)
+      const existingSavingsPot = settings.savingsPot || 0;
+      const newSavingsPot = existingSavingsPot + currentBalance;
       
       // Clear all transactions - they're no longer needed
       await updateTransactions([]);
