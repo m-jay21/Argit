@@ -3,6 +3,12 @@ import { PieChartIcon, SaveChangesIcon, ResetBudgetIcon, PlusIcon, AlertCircleIc
 import { calculateBudgetAmounts, validateBudgetPercentages, calculateSurplusDistribution } from '../utils/budgetHelpers';
 import { formatCurrency } from '../utils/calculations';
 
+function roundMoney2(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 0;
+  return Math.round(Math.max(0, n) * 100) / 100;
+}
+
 function BudgetAllocation({
   monthlyIncome = 0,
   budgetConfig,
@@ -12,7 +18,8 @@ function BudgetAllocation({
   currentBalance = 0
 }) {
   const [localBudgetConfig, setLocalBudgetConfig] = useState(budgetConfig);
-  const [validation, setValidation] = useState({ isValid: true, errors: [] });
+  /** Only show validation errors after user clicks Save (avoids flashing while typing). */
+  const [saveAttempted, setSaveAttempted] = useState(false);
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
 
@@ -22,21 +29,20 @@ function BudgetAllocation({
       // Use monthly income for budget allocation (not total balance)
       const updatedConfig = calculateBudgetAmounts(budgetConfig, monthlyIncome);
       setLocalBudgetConfig(updatedConfig);
+      setSaveAttempted(false);
     }
   }, [budgetConfig, monthlyIncome]);
 
-  // Validate percentages whenever they change
-  useEffect(() => {
-    if (localBudgetConfig && localBudgetConfig.categories && Array.isArray(localBudgetConfig.categories)) {
-      const validationResult = validateBudgetPercentages(localBudgetConfig.categories);
-      setValidation(validationResult);
-    }
-  }, [localBudgetConfig.categories]);
+  const budgetTotals =
+    localBudgetConfig && localBudgetConfig.categories && Array.isArray(localBudgetConfig.categories)
+      ? validateBudgetPercentages(localBudgetConfig.categories)
+      : { isValid: true, totalPercentage: 0, availableForSavings: 100, errors: [] };
 
   const inputMode = localBudgetConfig?.allocationInputMode === 'amount' ? 'amount' : 'percentage';
 
   const setAllocationInputMode = (mode) => {
     if (!localBudgetConfig) return;
+    setSaveAttempted(false);
     setLocalBudgetConfig({
       ...localBudgetConfig,
       allocationInputMode: mode
@@ -48,6 +54,7 @@ function BudgetAllocation({
       return;
     }
 
+    setSaveAttempted(false);
     const updatedCategories = localBudgetConfig.categories.map(cat =>
       cat.id === categoryId
         ? { ...cat, percentage: Math.max(0, Math.min(100, parseFloat(newPercentage) || 0)) }
@@ -66,9 +73,11 @@ function BudgetAllocation({
     if (!localBudgetConfig || !localBudgetConfig.categories || !Array.isArray(localBudgetConfig.categories)) {
       return;
     }
+    setSaveAttempted(false);
     const income = typeof monthlyIncome === 'number' && monthlyIncome > 0 ? monthlyIncome : 0;
     const num = parseFloat(rawValue);
-    const amount = Number.isFinite(num) ? Math.max(0, num) : 0;
+    const rawAmount = Number.isFinite(num) ? Math.max(0, num) : 0;
+    const amount = roundMoney2(rawAmount);
     const percentage = income > 0 ? Math.min(100, (amount / income) * 100) : 0;
 
     const updatedCategories = localBudgetConfig.categories.map(cat =>
@@ -80,12 +89,33 @@ function BudgetAllocation({
       categories: updatedCategories
     };
 
-    setLocalBudgetConfig(calculateBudgetAmounts(updatedConfig, monthlyIncome));
+    let nextConfig = calculateBudgetAmounts(updatedConfig, monthlyIncome);
+    // Keep stored budget cents aligned with 2 decimal places after income math
+    nextConfig = {
+      ...nextConfig,
+      categories: nextConfig.categories.map(c =>
+        c.id === categoryId
+          ? {
+              ...c,
+              budgetAmount: amount,
+              remainingAmount: amount - (c.spentAmount || 0),
+              percentage: income > 0 ? (amount / income) * 100 : 0
+            }
+          : c
+      )
+    };
+    const totalPct = nextConfig.categories.reduce((sum, c) => sum + (c.percentage || 0), 0);
+    nextConfig.totalAllocatedPercentage = totalPct;
+    nextConfig.availableForSavings = Math.max(0, 100 - totalPct);
+    nextConfig.lastUpdated = new Date().toISOString();
+    setLocalBudgetConfig(nextConfig);
   };
 
   const handleSaveChanges = () => {
-    if (validation.isValid) {
+    setSaveAttempted(true);
+    if (budgetTotals.isValid) {
       onUpdateBudgetConfig(localBudgetConfig);
+      setSaveAttempted(false);
     }
   };
 
@@ -98,6 +128,7 @@ function BudgetAllocation({
       }))
     };
     setLocalBudgetConfig(calculateBudgetAmounts(resetConfig, monthlyIncome));
+    setSaveAttempted(false);
   };
 
   const handleAddCategory = () => {
@@ -189,14 +220,14 @@ function BudgetAllocation({
         )}
 
         {/* Validation Errors */}
-        {!validation.isValid && (
+        {saveAttempted && !budgetTotals.isValid && (
           <div className="bg-red-50 border border-red-200 p-3 rounded-lg mb-4">
             <div className="flex items-center gap-2 text-red-700">
               <AlertCircleIcon className="w-4 h-4" />
               <span className="text-sm font-medium">Budget Validation Errors:</span>
             </div>
             <ul className="mt-1 text-sm text-red-600">
-              {validation.errors.map((error, index) => (
+              {budgetTotals.errors.map((error, index) => (
                 <li key={index}>• {error}</li>
               ))}
             </ul>
@@ -252,7 +283,9 @@ function BudgetAllocation({
                             step="0.01"
                             disabled={!monthlyIncome || monthlyIncome <= 0}
                             value={
-                              monthlyIncome && monthlyIncome > 0 ? category.budgetAmount ?? 0 : ''
+                              monthlyIncome && monthlyIncome > 0
+                                ? roundMoney2(category.budgetAmount ?? 0)
+                                : ''
                             }
                             onChange={(e) => handleAmountChange(category.id, e.target.value)}
                             placeholder="0.00"
@@ -342,33 +375,41 @@ function BudgetAllocation({
             <span className="font-medium text-text-primary">
               {inputMode === 'amount' ? (
                 <>
-                  {formatCurrency((monthlyIncome || 0) * (validation.totalPercentage || 0) / 100, currency)}
+                  {formatCurrency((monthlyIncome || 0) * (budgetTotals.totalPercentage || 0) / 100, currency)}
                   <span className="text-text-secondary font-normal">
                     {' '}
-                    ({(validation.totalPercentage || 0).toFixed(1)}%)
+                    ({(budgetTotals.totalPercentage || 0).toFixed(1)}%)
                   </span>
                 </>
               ) : (
                 <>
-                  {(validation.totalPercentage || 0).toFixed(1)}% ({formatCurrency((monthlyIncome || 0) * (validation.totalPercentage || 0) / 100, currency)})
+                  {(budgetTotals.totalPercentage || 0).toFixed(1)}% ({formatCurrency((monthlyIncome || 0) * (budgetTotals.totalPercentage || 0) / 100, currency)})
                 </>
               )}
             </span>
           </div>
           <div className="flex justify-between items-center text-sm mt-1">
             <span className="text-text-secondary">Available for Savings:</span>
-            <span className={`font-medium ${(validation.availableForSavings || 0) >= 1 ? 'text-green-600' : 'text-red-600'}`}>
+            <span
+              className={`font-medium ${
+                saveAttempted && !budgetTotals.isValid
+                  ? 'text-red-600'
+                  : (budgetTotals.availableForSavings || 0) >= 1
+                    ? 'text-green-600'
+                    : 'text-text-primary'
+              }`}
+            >
               {inputMode === 'amount' ? (
                 <>
-                  {formatCurrency((monthlyIncome || 0) * (validation.availableForSavings || 0) / 100, currency)}
+                  {formatCurrency((monthlyIncome || 0) * (budgetTotals.availableForSavings || 0) / 100, currency)}
                   <span className="font-normal opacity-90">
                     {' '}
-                    ({(validation.availableForSavings || 0).toFixed(1)}%)
+                    ({(budgetTotals.availableForSavings || 0).toFixed(1)}%)
                   </span>
                 </>
               ) : (
                 <>
-                  {(validation.availableForSavings || 0).toFixed(1)}% ({formatCurrency((monthlyIncome || 0) * (validation.availableForSavings || 0) / 100, currency)})
+                  {(budgetTotals.availableForSavings || 0).toFixed(1)}% ({formatCurrency((monthlyIncome || 0) * (budgetTotals.availableForSavings || 0) / 100, currency)})
                 </>
               )}
             </span>
@@ -378,13 +419,9 @@ function BudgetAllocation({
         {/* Action Buttons */}
         <div className="flex gap-3 mt-4">
           <button
+            type="button"
             onClick={handleSaveChanges}
-            disabled={!validation.isValid}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              validation.isValid
-                ? 'bg-accent-primary text-white hover:bg-opacity-90'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-accent-primary text-white hover:bg-opacity-90"
           >
             <SaveChangesIcon className="w-4 h-4" />
             Save Changes
