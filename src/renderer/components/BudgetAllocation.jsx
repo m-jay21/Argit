@@ -33,6 +33,16 @@ function BudgetAllocation({
     }
   }, [localBudgetConfig.categories]);
 
+  const inputMode = localBudgetConfig?.allocationInputMode === 'amount' ? 'amount' : 'percentage';
+
+  const setAllocationInputMode = (mode) => {
+    if (!localBudgetConfig) return;
+    setLocalBudgetConfig({
+      ...localBudgetConfig,
+      allocationInputMode: mode
+    });
+  };
+
   const handlePercentageChange = (categoryId, newPercentage) => {
     if (!localBudgetConfig || !localBudgetConfig.categories || !Array.isArray(localBudgetConfig.categories)) {
       return;
@@ -42,6 +52,27 @@ function BudgetAllocation({
       cat.id === categoryId
         ? { ...cat, percentage: Math.max(0, Math.min(100, parseFloat(newPercentage) || 0)) }
         : cat
+    );
+
+    const updatedConfig = {
+      ...localBudgetConfig,
+      categories: updatedCategories
+    };
+
+    setLocalBudgetConfig(calculateBudgetAmounts(updatedConfig, monthlyIncome));
+  };
+
+  const handleAmountChange = (categoryId, rawValue) => {
+    if (!localBudgetConfig || !localBudgetConfig.categories || !Array.isArray(localBudgetConfig.categories)) {
+      return;
+    }
+    const income = typeof monthlyIncome === 'number' && monthlyIncome > 0 ? monthlyIncome : 0;
+    const num = parseFloat(rawValue);
+    const amount = Number.isFinite(num) ? Math.max(0, num) : 0;
+    const percentage = income > 0 ? Math.min(100, (amount / income) * 100) : 0;
+
+    const updatedCategories = localBudgetConfig.categories.map(cat =>
+      cat.id === categoryId ? { ...cat, percentage } : cat
     );
 
     const updatedConfig = {
@@ -110,17 +141,52 @@ function BudgetAllocation({
     <div className="space-y-5">
       {/* Budget Allocation Header */}
       <div className="bg-bg-secondary border border-border-light p-4 rounded-lg">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-accent-primary rounded-lg flex items-center justify-center">
-            <PieChartIcon className="w-5 h-5 text-white" />
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 bg-accent-primary rounded-lg flex items-center justify-center shrink-0">
+              <PieChartIcon className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-text-primary">Budget Allocation</h2>
+              <p className="text-sm text-text-secondary">
+                This Month's Income: {formatCurrency(monthlyIncome, currency)}
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-lg font-semibold text-text-primary">Budget Allocation</h2>
-            <p className="text-sm text-text-secondary">
-              This Month's Income: {formatCurrency(monthlyIncome, currency)}
-            </p>
+          <div
+            className="flex items-center gap-1 rounded-lg border border-border-input p-0.5 bg-bg-primary shrink-0 ml-auto"
+            role="group"
+            aria-label="Budget input mode"
+          >
+            <button
+              type="button"
+              onClick={() => setAllocationInputMode('percentage')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                inputMode === 'percentage'
+                  ? 'bg-accent-primary text-white shadow-sm'
+                  : 'text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              %
+            </button>
+            <button
+              type="button"
+              onClick={() => setAllocationInputMode('amount')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                inputMode === 'amount'
+                  ? 'bg-accent-primary text-white shadow-sm'
+                  : 'text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              Exact
+            </button>
           </div>
         </div>
+        {inputMode === 'amount' && (!monthlyIncome || monthlyIncome <= 0) && (
+          <p className="text-xs text-text-secondary mb-3 -mt-2">
+            Add income for this period to edit exact amounts; percentages still work.
+          </p>
+        )}
 
         {/* Validation Errors */}
         {!validation.isValid && (
@@ -143,7 +209,9 @@ function BudgetAllocation({
             <thead>
               <tr className="border-b border-border-light">
                 <th className="text-left py-2 text-sm font-medium text-text-secondary">Category</th>
-                <th className="text-left py-2 text-sm font-medium text-text-secondary">%</th>
+                <th className="text-left py-2 text-sm font-medium text-text-secondary">
+                  {inputMode === 'percentage' ? '%' : 'Amount'}
+                </th>
                 <th className="text-left py-2 text-sm font-medium text-text-secondary">Budgeted</th>
                 <th className="text-left py-2 text-sm font-medium text-text-secondary">Used</th>
                 <th className="text-left py-2 text-sm font-medium text-text-secondary">Progress</th>
@@ -163,16 +231,38 @@ function BudgetAllocation({
                       </div>
                     </td>
                     <td className="py-3">
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.5"
-                        value={category.percentage}
-                        onChange={(e) => handlePercentageChange(category.id, e.target.value)}
-                        className="w-16 px-2 py-1 text-sm bg-bg-secondary border border-border-input rounded focus:outline-none focus:border-accent-primary text-text-primary"
-                      />
-                      <span className="text-xs text-text-secondary ml-1">%</span>
+                      {inputMode === 'percentage' ? (
+                        <>
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.5"
+                            value={category.percentage ?? 0}
+                            onChange={(e) => handlePercentageChange(category.id, e.target.value)}
+                            className="w-16 px-2 py-1 text-sm bg-bg-secondary border border-border-input rounded focus:outline-none focus:border-accent-primary text-text-primary"
+                          />
+                          <span className="text-xs text-text-secondary ml-1">%</span>
+                        </>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            disabled={!monthlyIncome || monthlyIncome <= 0}
+                            value={
+                              monthlyIncome && monthlyIncome > 0 ? category.budgetAmount ?? 0 : ''
+                            }
+                            onChange={(e) => handleAmountChange(category.id, e.target.value)}
+                            placeholder="0.00"
+                            className="w-24 px-2 py-1 text-sm bg-bg-secondary border border-border-input rounded focus:outline-none focus:border-accent-primary text-text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                          />
+                          <span className="text-xs text-text-secondary whitespace-nowrap">
+                            {currency}
+                          </span>
+                        </div>
+                      )}
                     </td>
                     <td className="py-3">
                       <span className="text-sm text-text-primary">{formatCurrency(category.budgetAmount, currency)}</span>
@@ -250,13 +340,37 @@ function BudgetAllocation({
           <div className="flex justify-between items-center text-sm">
             <span className="text-text-secondary">Total Allocated:</span>
             <span className="font-medium text-text-primary">
-              {(validation.totalPercentage || 0).toFixed(1)}% ({formatCurrency((monthlyIncome || 0) * (validation.totalPercentage || 0) / 100, currency)})
+              {inputMode === 'amount' ? (
+                <>
+                  {formatCurrency((monthlyIncome || 0) * (validation.totalPercentage || 0) / 100, currency)}
+                  <span className="text-text-secondary font-normal">
+                    {' '}
+                    ({(validation.totalPercentage || 0).toFixed(1)}%)
+                  </span>
+                </>
+              ) : (
+                <>
+                  {(validation.totalPercentage || 0).toFixed(1)}% ({formatCurrency((monthlyIncome || 0) * (validation.totalPercentage || 0) / 100, currency)})
+                </>
+              )}
             </span>
           </div>
           <div className="flex justify-between items-center text-sm mt-1">
             <span className="text-text-secondary">Available for Savings:</span>
             <span className={`font-medium ${(validation.availableForSavings || 0) >= 1 ? 'text-green-600' : 'text-red-600'}`}>
-              {(validation.availableForSavings || 0).toFixed(1)}% ({formatCurrency((monthlyIncome || 0) * (validation.availableForSavings || 0) / 100, currency)})
+              {inputMode === 'amount' ? (
+                <>
+                  {formatCurrency((monthlyIncome || 0) * (validation.availableForSavings || 0) / 100, currency)}
+                  <span className="font-normal opacity-90">
+                    {' '}
+                    ({(validation.availableForSavings || 0).toFixed(1)}%)
+                  </span>
+                </>
+              ) : (
+                <>
+                  {(validation.availableForSavings || 0).toFixed(1)}% ({formatCurrency((monthlyIncome || 0) * (validation.availableForSavings || 0) / 100, currency)})
+                </>
+              )}
             </span>
           </div>
         </div>

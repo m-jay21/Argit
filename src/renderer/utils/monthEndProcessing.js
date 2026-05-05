@@ -10,13 +10,37 @@ export function getCurrentMonthKey() {
  * Gets the target pay day date for the current month
  * Handles edge cases like payDay 31 in months with fewer days
  */
+/**
+ * Parse stored lastProcessedPayDay (YYYY-MM-DD or ISO start) to a local calendar date, or null if invalid.
+ */
+export function parseLastProcessedPayDay(lastProcessedPayDay) {
+  if (lastProcessedPayDay == null) return null;
+  const raw = String(lastProcessedPayDay).trim();
+  if (!raw) return null;
+  const datePart = raw.length >= 10 ? raw.slice(0, 10) : raw;
+  const m = datePart.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return null;
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  if (!Number.isFinite(year) || month < 1 || month > 12 || day < 1 || day > 31) return null;
+  const d = new Date(year, month - 1, day);
+  d.setHours(0, 0, 0, 0);
+  if (Number.isNaN(d.getTime())) return null;
+  if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) return null;
+  return d;
+}
+
 export function getTargetPayDayDate(payDay) {
   const today = new Date();
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth();
-  
+  const dayNum = Number(payDay);
+  if (!Number.isFinite(dayNum)) {
+    return new Date(currentYear, currentMonth, 1);
+  }
   // Try to create date with the payDay
-  const targetDate = new Date(currentYear, currentMonth, payDay);
+  const targetDate = new Date(currentYear, currentMonth, dayNum);
   
   // If the month doesn't have that many days, use the last day of the month
   if (targetDate.getMonth() !== currentMonth) {
@@ -34,14 +58,15 @@ export function getTargetPayDayDate(payDay) {
  * - We haven't processed this pay day period yet (this month)
  */
 export function shouldProcessPayDay(payDay, lastProcessedPayDay) {
-  if (!payDay || payDay < 1 || payDay > 31) {
+  const d = Number(payDay);
+  if (!Number.isFinite(d) || d < 1 || d > 31) {
     return false;
   }
   
   const today = new Date();
   today.setHours(0, 0, 0, 0); // Normalize to start of day
   
-  const targetDate = getTargetPayDayDate(payDay);
+  const targetDate = getTargetPayDayDate(d);
   targetDate.setHours(0, 0, 0, 0);
   
   // If today is before the pay day, don't process
@@ -49,16 +74,17 @@ export function shouldProcessPayDay(payDay, lastProcessedPayDay) {
     return false;
   }
   
-  // If we haven't processed any pay day yet, only process if today is on or after pay day
-  if (!lastProcessedPayDay) {
+  const lastProcessed = parseLastProcessedPayDay(lastProcessedPayDay);
+  // Missing marker: need one reset for this pay period (today is on or after pay day)
+  if (lastProcessed == null) {
+    if (lastProcessedPayDay != null && String(lastProcessedPayDay).trim() !== '') {
+      console.warn(
+        'Argit: lastProcessedPayDay is set but invalid; fix argit-data.json (use YYYY-MM-DD). Skipping pay-day reset until fixed.'
+      );
+      return false;
+    }
     return today >= targetDate;
   }
-  
-  // Parse the last processed date string (format: YYYY-MM-DD)
-  // Use local time to avoid timezone issues
-  const [year, month, day] = lastProcessedPayDay.split('-').map(Number);
-  const lastProcessed = new Date(year, month - 1, day); // month is 0-indexed
-  lastProcessed.setHours(0, 0, 0, 0);
   
   // If we processed today, don't process again (prevents multiple runs on same day)
   if (lastProcessed.getTime() === today.getTime()) {
@@ -148,33 +174,53 @@ export function calculateMonthlySurplus(budgetConfig, transactions) {
 
 // Balance reset processing - transfers entire balance to savings pot on pay day
 
-export function processPayDayReset(budgetConfig, transactions, settings, updateTransactions, updateSettings) {
+export function processPayDayReset(
+  budgetConfig,
+  transactions,
+  settings,
+  updateTransactions,
+  updateSettings,
+  options = {}
+) {
+  const { getFreshData, persistWithEmptyTransactions } = options;
   return new Promise(async (resolve, reject) => {
     try {
-      const payDay = settings.payDay || 1;
-      
-      // Check if we should process using payDay logic
-      if (!shouldProcessPayDay(payDay, settings.lastProcessedPayDay)) {
-        resolve({ processed: false, reason: 'Pay day not reached or already processed' });
+      let txs = transactions;
+      let stg = settings;
+
+      if (typeof getFreshData === 'function') {
+        const fresh = await getFreshData();
+        txs = Array.isArray(fresh.transactions) ? fresh.transactions : [];
+        stg = fresh.settings && typeof fresh.settings === 'object' ? fresh.settings : settings;
+      }
+
+      const payDay = Number(stg.payDay);
+      const effectivePayDay = Number.isFinite(payDay) && payDay >= 1 && payDay <= 31 ? payDay : 1;
+
+      if (!shouldProcessPayDay(effectivePayDay, stg.lastProcessedPayDay)) {
+        resolve({
+          processed: false,
+          reason: 'Pay day not reached or already processed'
+        });
         return;
       }
 
-      const surplusData = calculateMonthlySurplus(budgetConfig, transactions);
+      const surplusData = calculateMonthlySurplus(budgetConfig, txs);
       
       // Calculate current balance before clearing transactions
-      const totalIncome = transactions
+      const totalIncome = txs
         .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + t.amount, 0);
-      const totalExpenses = transactions
+      const totalExpenses = txs
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
-      const currentBalance = (settings.startingBalance || 0) + totalIncome - totalExpenses;
+      const currentBalance = (stg.startingBalance || 0) + totalIncome - totalExpenses;
       
       // Create transaction backup before clearing
       let backupResult = null;
-      if (transactions.length > 0) {
+      if (txs.length > 0) {
         try {
-          backupResult = await saveTransactionBackup(transactions, settings);
+          backupResult = await saveTransactionBackup(txs, stg);
           console.log('Transaction backup created:', backupResult);
         } catch (backupError) {
           console.warn('Failed to create transaction backup:', backupError);
@@ -183,36 +229,44 @@ export function processPayDayReset(budgetConfig, transactions, settings, updateT
       }
       
       // Add current balance to existing savings pot (do not clear existing savings)
-      const existingSavingsPot = settings.savingsPot || 0;
+      const existingSavingsPot = stg.savingsPot || 0;
       const newSavingsPot = existingSavingsPot + currentBalance;
       
       // Get the target pay day date for tracking
-      const targetPayDayDate = getTargetPayDayDate(payDay);
+      const targetPayDayDate = getTargetPayDayDate(effectivePayDay);
       // Store date in YYYY-MM-DD format using local time (not UTC)
       const year = targetPayDayDate.getFullYear();
       const month = String(targetPayDayDate.getMonth() + 1).padStart(2, '0');
       const day = String(targetPayDayDate.getDate()).padStart(2, '0');
       const processedDateString = `${year}-${month}-${day}`;
       
-      // Clear all transactions - they're no longer needed
-      await updateTransactions([]);
-      
-      // Update settings with new savings pot, processed pay day, and reset starting balance to 0
-      // (since the entire balance is now in the savings pot)
       const updatedSettings = {
-        ...settings,
+        ...stg,
         lastProcessedPayDay: processedDateString,
         savingsPot: newSavingsPot,
-        startingBalance: 0 // Reset to 0 since all money is now in savings pot
+        startingBalance: 0 // Reset to 0 since all money is now in the savings pot
       };
       
       // Migrate from lastProcessedMonth if it exists (for backward compatibility)
-      if (settings.lastProcessedMonth && !settings.lastProcessedPayDay) {
-        // Keep lastProcessedMonth for now but also set lastProcessedPayDay
-        updatedSettings.lastProcessedMonth = settings.lastProcessedMonth;
+      if (stg.lastProcessedMonth && !stg.lastProcessedPayDay) {
+        updatedSettings.lastProcessedMonth = stg.lastProcessedMonth;
       }
-      
-      await updateSettings(updatedSettings);
+
+      if (typeof persistWithEmptyTransactions === 'function') {
+        const saveResult = await persistWithEmptyTransactions(updatedSettings);
+        if (!saveResult || saveResult.success === false) {
+          throw new Error(saveResult?.error || 'Failed to save pay day reset');
+        }
+      } else {
+        const txResult = await updateTransactions([]);
+        if (txResult && txResult.success === false) {
+          throw new Error(txResult.error || 'Failed to clear transactions for pay day reset');
+        }
+        const setResult = await updateSettings(updatedSettings);
+        if (setResult && setResult.success === false) {
+          throw new Error(setResult.error || 'Failed to update settings for pay day reset');
+        }
+      }
 
       const payDayDisplay = targetPayDayDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
       
@@ -236,38 +290,62 @@ export function processPayDayReset(budgetConfig, transactions, settings, updateT
 }
 
 // Legacy function for backward compatibility
-export function processMonthEndSurplus(budgetConfig, transactions, settings, updateTransactions, updateSettings) {
+export function processMonthEndSurplus(
+  budgetConfig,
+  transactions,
+  settings,
+  updateTransactions,
+  updateSettings,
+  options = {}
+) {
   // If payDay is set, use the new logic
   if (settings.payDay !== undefined && settings.payDay !== null) {
-    return processPayDayReset(budgetConfig, transactions, settings, updateTransactions, updateSettings);
+    return processPayDayReset(
+      budgetConfig,
+      transactions,
+      settings,
+      updateTransactions,
+      updateSettings,
+      options
+    );
   }
   
   // Otherwise, fall back to old month-based logic
+  const { getFreshData, persistWithEmptyTransactions } = options;
   return new Promise(async (resolve, reject) => {
     try {
+      let txs = transactions;
+      let stg = settings;
+
+      if (typeof getFreshData === 'function') {
+        const fresh = await getFreshData();
+        txs = Array.isArray(fresh.transactions) ? fresh.transactions : [];
+        stg = fresh.settings && typeof fresh.settings === 'object' ? fresh.settings : settings;
+      }
+
       const currentMonth = getCurrentMonthKey();
       
-      if (!shouldProcessMonthEnd(settings.lastProcessedMonth)) {
+      if (!shouldProcessMonthEnd(stg.lastProcessedMonth)) {
         resolve({ processed: false, reason: 'Already processed this month' });
         return;
       }
 
-      const surplusData = calculateMonthlySurplus(budgetConfig, transactions);
+      const surplusData = calculateMonthlySurplus(budgetConfig, txs);
       
       // Calculate current balance before clearing transactions
-      const totalIncome = transactions
+      const totalIncome = txs
         .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + t.amount, 0);
-      const totalExpenses = transactions
+      const totalExpenses = txs
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
-      const currentBalance = (settings.startingBalance || 0) + totalIncome - totalExpenses;
+      const currentBalance = (stg.startingBalance || 0) + totalIncome - totalExpenses;
       
       // Create transaction backup before clearing
       let backupResult = null;
-      if (transactions.length > 0) {
+      if (txs.length > 0) {
         try {
-          backupResult = await saveTransactionBackup(transactions, settings);
+          backupResult = await saveTransactionBackup(txs, stg);
           console.log('Transaction backup created:', backupResult);
         } catch (backupError) {
           console.warn('Failed to create transaction backup:', backupError);
@@ -276,20 +354,31 @@ export function processMonthEndSurplus(budgetConfig, transactions, settings, upd
       }
       
       // Add current balance to existing savings pot (do not clear existing savings)
-      const existingSavingsPot = settings.savingsPot || 0;
+      const existingSavingsPot = stg.savingsPot || 0;
       const newSavingsPot = existingSavingsPot + currentBalance;
       
-      // Clear all transactions - they're no longer needed
-      await updateTransactions([]);
-      
-      // Update settings with new savings pot, processed month, and reset starting balance to 0
-      // (since the entire balance is now in the savings pot)
-      await updateSettings({
-        ...settings,
+      const updatedSettings = {
+        ...stg,
         lastProcessedMonth: currentMonth,
         savingsPot: newSavingsPot,
         startingBalance: 0 // Reset to 0 since all money is now in savings pot
-      });
+      };
+
+      if (typeof persistWithEmptyTransactions === 'function') {
+        const saveResult = await persistWithEmptyTransactions(updatedSettings);
+        if (!saveResult || saveResult.success === false) {
+          throw new Error(saveResult?.error || 'Failed to save month-end reset');
+        }
+      } else {
+        const txResult = await updateTransactions([]);
+        if (txResult && txResult.success === false) {
+          throw new Error(txResult.error || 'Failed to clear transactions for month-end reset');
+        }
+        const setResult = await updateSettings(updatedSettings);
+        if (setResult && setResult.success === false) {
+          throw new Error(setResult.error || 'Failed to update settings for month-end reset');
+        }
+      }
 
       resolve({
         processed: true,

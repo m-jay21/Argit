@@ -110,7 +110,11 @@ ipcMain.handle('get-app-data', async () => {
         startingBalance: 0,
         currency: 'AED',
         theme: 'system',
-        savingsPot: 0
+        payDay: 1,
+        lastProcessedPayDay: null,
+        lastProcessedMonth: null,
+        savingsPot: 0,
+        transfersFromSavings: 0
       }
     };
   } catch (error) {
@@ -130,7 +134,11 @@ ipcMain.handle('get-app-data', async () => {
         startingBalance: 0,
         currency: 'AED',
         theme: 'system',
-        savingsPot: 0
+        payDay: 1,
+        lastProcessedPayDay: null,
+        lastProcessedMonth: null,
+        savingsPot: 0,
+        transfersFromSavings: 0
       }
     };
   }

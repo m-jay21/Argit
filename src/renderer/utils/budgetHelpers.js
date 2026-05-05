@@ -17,6 +17,8 @@ export const PROTECTED_CATEGORIES = ['Income', 'Subscription'];
 export function createDefaultBudgetConfig() {
   return {
     monthlyIncome: 0,
+    /** 'percentage' | 'amount' — UI preference for Budget Allocation editor */
+    allocationInputMode: 'percentage',
     categories: DEFAULT_CATEGORIES.map((cat, index) => ({
       id: `cat_${cat.name.toLowerCase()}`,
       name: cat.name,

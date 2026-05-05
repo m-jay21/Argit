@@ -24,7 +24,17 @@ function App() {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   // Use the local storage hook for data persistence
-  const { data, isLoading, updateTransactions, updateSubscriptions, updateBudgetConfig, updateSavingsGoals, updateSettings } = useLocalStorage();
+  const {
+    data,
+    isLoading,
+    getFreshData,
+    persistWithEmptyTransactions,
+    updateTransactions,
+    updateSubscriptions,
+    updateBudgetConfig,
+    updateSavingsGoals,
+    updateSettings
+  } = useLocalStorage();
   const { transactions, subscriptions, budgetConfig, savingsGoals, settings } = data;
 
   // Calculate balance including starting balance and transfers from savings
@@ -159,7 +169,8 @@ function App() {
             transactions,
             settings,
             updateTransactions,
-            updateSettings
+            updateSettings,
+            { getFreshData, persistWithEmptyTransactions }
           ).then(result => {
             if (result.processed) {
               console.log('Pay day processing:', result.message);
@@ -180,7 +191,8 @@ function App() {
           transactions,
           settings,
           updateTransactions,
-          updateSettings
+          updateSettings,
+          { getFreshData, persistWithEmptyTransactions }
         ).then(result => {
           if (result.processed) {
             console.log('Month-end processing:', result.message);

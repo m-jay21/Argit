@@ -98,13 +98,11 @@ function TransactionForm({ onAddTransaction, availableCategories = [], settings 
         </select>
       </div>
       
-      {/* Savings pot indicator */}
-      {(settings.savingsPot || 0) > 0 && (
-        <div className="text-xs text-info-color mb-2 flex items-center gap-1">
-          <SavingsPotIcon className="w-3 h-3" />
-          Savings pot: {(settings.savingsPot || 0).toFixed(2)} AED available
-        </div>
-      )}
+      {/* Savings pot indicator - always visible so user sees balance and From Savings context */}
+      <div className="text-xs text-info-color mb-2 flex items-center gap-1">
+        <SavingsPotIcon className="w-3 h-3" />
+        Savings pot: {(settings.savingsPot || 0).toFixed(2)} AED available
+      </div>
       
       <div className="flex gap-2 my-1">
           <button

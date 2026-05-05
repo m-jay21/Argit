@@ -194,14 +194,27 @@ export function useLocalStorage() {
     return saveData(newData);
   };
 
+  /** Single save: clear transactions and merge settings (pay-day / month-end reset). */
+  const persistWithEmptyTransactions = async (partialSettings) => {
+    const freshData = await getFreshData();
+    const newData = {
+      ...freshData,
+      transactions: [],
+      settings: { ...freshData.settings, ...partialSettings }
+    };
+    return saveData(newData);
+  };
+
   return {
     data,
     isLoading,
     saveData,
+    getFreshData,
     updateTransactions,
     updateSubscriptions,
     updateSettings,
     updateBudgetConfig,
-    updateSavingsGoals
+    updateSavingsGoals,
+    persistWithEmptyTransactions
   };
 }
