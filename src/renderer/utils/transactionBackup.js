@@ -8,7 +8,13 @@ export function formatTransactionForBackup(transaction) {
   });
   
   const amount = `AED ${transaction.amount.toFixed(2)}`;
-  const type = transaction.type.toUpperCase();
+  const isToSavingsTransfer =
+    transaction.toSavings === true ||
+    (transaction.type === 'expense' &&
+      transaction.category === 'Savings' &&
+      !transaction.fromSavings);
+
+  const type = isToSavingsTransfer ? 'TRANSFER' : transaction.type.toUpperCase();
   const category = transaction.category || 'Other';
   const description = transaction.description || '';
   
@@ -47,7 +53,14 @@ Generated on: ${new Date().toLocaleString()}
     .reduce((sum, t) => sum + t.amount, 0);
     
   const expenses = monthTransactions
-    .filter(t => t.type === 'expense')
+    .filter(
+      t =>
+        t.type === 'expense' &&
+        !(
+          t.toSavings === true ||
+          (t.category === 'Savings' && !t.fromSavings)
+        )
+    )
     .reduce((sum, t) => sum + t.amount, 0);
     
   const net = income - expenses;
@@ -55,7 +68,14 @@ Generated on: ${new Date().toLocaleString()}
   // Group by category
   const expensesByCategory = {};
   monthTransactions
-    .filter(t => t.type === 'expense')
+    .filter(
+      t =>
+        t.type === 'expense' &&
+        !(
+          t.toSavings === true ||
+          (t.category === 'Savings' && !t.fromSavings)
+        )
+    )
     .forEach(t => {
       const category = t.category || 'Other';
       expensesByCategory[category] = (expensesByCategory[category] || 0) + t.amount;

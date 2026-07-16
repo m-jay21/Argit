@@ -69,13 +69,24 @@ export function getMonthlyStats(transactions, payDay) {
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  // Calculate savings deposits (expenses with category 'Savings') - these reduce available income for budget
+  // Savings transfers reduce available budget income, but are not spending.
   const savingsDeposits = currentMonthTransactions
-    .filter(t => t.type === 'expense' && t.category === 'Savings')
+    .filter(
+      t =>
+        t.type === 'expense' &&
+        (t.toSavings === true || (t.category === 'Savings' && !t.fromSavings))
+    )
     .reduce((sum, t) => sum + t.amount, 0);
 
   const monthlyExpenses = currentMonthTransactions
-    .filter(t => t.type === 'expense')
+    .filter(
+      t =>
+        t.type === 'expense' &&
+        !(
+          t.toSavings === true ||
+          (t.category === 'Savings' && !t.fromSavings)
+        )
+    )
     .reduce((sum, t) => sum + t.amount, 0);
 
   // Available income for budget = total income - savings deposits

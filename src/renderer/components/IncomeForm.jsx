@@ -85,14 +85,15 @@ function IncomeForm({ onAddTransaction, settings = {}, onUpdateSettings }) {
             const amount = parseFloat(formData.amount);
             if (amount <= 0) return;
 
-            // Deposit to savings pot - creates an expense transaction that reduces balance
-            // but increases savings pot
+            // Deposit to savings pot - reduces spendable balance,
+            // but should not count as a spending expense in reports.
             const transaction = {
               type: 'expense',
               description: formData.description || 'Deposit to Savings Pot',
               date: formData.date || new Date().toISOString().split('T')[0],
               category: 'Savings',
-              amount
+              amount,
+              toSavings: true
             };
 
             try {

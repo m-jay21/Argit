@@ -41,13 +41,29 @@ function TransactionList({ transactions, onRemoveTransaction, currency = 'USD' }
   return (
     <div className="space-y-3 max-h-96 overflow-y-auto">
       {transactions.map((transaction) => (
+        // Treat "to savings pot" as a transfer for UI purposes even though it is stored as an expense transaction.
+        // This prevents the row from looking like a normal red spending item.
+        (() => {
+          const descriptionLower = (transaction.description || '').toLowerCase();
+          const isToSavingsTransfer =
+            transaction.toSavings === true ||
+            (transaction.type === 'expense' &&
+              transaction.category === 'Savings' &&
+              // Best-effort for legacy entries created before the `toSavings` flag existed
+              (descriptionLower.includes('deposit') || descriptionLower.includes('savings pot')));
+
+          return (
         <div
           key={transaction.id}
           className="flex items-center justify-between p-3 bg-bg-secondary rounded-lg border border-border-light"
         >
           <div className="flex items-center space-x-3 flex-1">
             <div className={`flex-shrink-0 ${
-              transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                transaction.type === 'income'
+                  ? 'text-green-600'
+                  : isToSavingsTransfer
+                    ? 'text-teal-600'
+                    : 'text-red-600'
             }`}>
               {transaction.type === 'income' ? (
                 <ArrowUpCircleIcon className="h-5 w-5" />
@@ -61,6 +77,11 @@ function TransactionList({ transactions, onRemoveTransaction, currency = 'USD' }
                 <p className="text-sm font-medium text-text-primary truncate">
                   {transaction.description}
                 </p>
+                {isToSavingsTransfer && (
+                  <span className="px-2 py-0.5 text-[11px] rounded-full bg-bg-accent text-text-primary whitespace-nowrap">
+                    To Savings
+                  </span>
+                )}
                 {transaction.category && (
                   <span className={`px-2 py-1 text-xs rounded-full ${getCategoryColor(transaction.category)}`}>
                     {transaction.category}
@@ -89,6 +110,8 @@ function TransactionList({ transactions, onRemoveTransaction, currency = 'USD' }
             <DeleteIcon className="h-4 w-4" />
           </button>
         </div>
+          );
+        })()
       ))}
     </div>
   );
