@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AddIncomeIcon, ToSavingsIcon } from './icons';
 
-function IncomeForm({ onAddTransaction, settings = {}, onUpdateSettings }) {
+function IncomeForm({ onAddTransaction, onAddTransactionAndUpdateSettings, settings = {}, onUpdateSettings }) {
   const [formData, setFormData] = useState({
     amount: '',
     description: '',
@@ -97,17 +97,20 @@ function IncomeForm({ onAddTransaction, settings = {}, onUpdateSettings }) {
             };
 
             try {
-              // Add the transaction first (this reduces your balance)
-              await onAddTransaction(transaction);
-              
-              // Then add to savings pot
-              if (onUpdateSettings) {
-                const currentPot = settings.savingsPot || 0;
-                const updatedSettings = {
-                  ...settings,
-                  savingsPot: currentPot + amount
-                };
-                await onUpdateSettings(updatedSettings);
+              // Atomic save: transaction + savings pot increase (avoids race with budget updates)
+              if (onAddTransactionAndUpdateSettings) {
+                await onAddTransactionAndUpdateSettings(transaction, {
+                  savingsPot: (settings.savingsPot || 0) + amount
+                });
+              } else {
+                await onAddTransaction(transaction);
+                if (onUpdateSettings) {
+                  const currentPot = settings.savingsPot || 0;
+                  await onUpdateSettings({
+                    ...settings,
+                    savingsPot: currentPot + amount
+                  });
+                }
               }
 
               // Reset form

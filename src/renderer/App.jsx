@@ -29,6 +29,7 @@ function App() {
     isLoading,
     getFreshData,
     persistWithEmptyTransactions,
+    persistWithNewTransactionAndSettings,
     updateTransactions,
     updateSubscriptions,
     updateBudgetConfig,
@@ -226,6 +227,19 @@ function App() {
     }
   };
 
+  const addTransactionAndUpdateSettings = async (transaction, settingsPatch) => {
+    const newTransaction = {
+      ...transaction,
+      id: Date.now().toString(),
+      timestamp: Date.now()
+    };
+
+    const result = await persistWithNewTransactionAndSettings(newTransaction, settingsPatch);
+    if (!result?.success) {
+      throw new Error(result?.error || 'Failed to save');
+    }
+  };
+
   const removeTransaction = async (id) => {
     const newTransactions = transactions.filter(t => t.id !== id);
     await updateTransactions(newTransactions);
@@ -362,6 +376,7 @@ function App() {
                     </div>
                     <IncomeForm 
                       onAddTransaction={addTransaction}
+                      onAddTransactionAndUpdateSettings={addTransactionAndUpdateSettings}
                       settings={settings || {}}
                       onUpdateSettings={updateSettings}
                     />
@@ -375,6 +390,7 @@ function App() {
                   </div>
                   <TransactionForm
                     onAddTransaction={addTransaction}
+                    onAddTransactionAndUpdateSettings={addTransactionAndUpdateSettings}
                     availableCategories={budgetConfig?.categories || []}
                     settings={settings || {}}
                     onUpdateSettings={updateSettings}

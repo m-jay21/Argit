@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AddExpenseIcon, SavingsPotIcon, FromSavingsIcon } from './icons';
 
-function TransactionForm({ onAddTransaction, availableCategories = [], settings = {}, onUpdateSettings }) {
+function TransactionForm({ onAddTransaction, onAddTransactionAndUpdateSettings, availableCategories = [], settings = {}, onUpdateSettings }) {
   const [formData, setFormData] = useState({
     type: 'expense',
     amount: '',
@@ -158,18 +158,21 @@ function TransactionForm({ onAddTransaction, availableCategories = [], settings 
                 fromSavings: true
               };
 
-              // Add the transaction first
-                await onAddTransaction(transaction);
-                
-              // Then deduct from savings pot
-                if (onUpdateSettings) {
-                const currentPot = settings.savingsPot || 0;
-                  const updatedSettings = {
-                    ...settings,
+              const currentPot = settings.savingsPot || 0;
+              // Atomic save: transaction + savings pot deduction (avoids race with budget updates)
+              if (onAddTransactionAndUpdateSettings) {
+                await onAddTransactionAndUpdateSettings(transaction, {
                   savingsPot: currentPot - amount
-                  };
-                  await onUpdateSettings(updatedSettings);
+                });
+              } else {
+                await onAddTransaction(transaction);
+                if (onUpdateSettings) {
+                  await onUpdateSettings({
+                    ...settings,
+                    savingsPot: currentPot - amount
+                  });
                 }
+              }
 
                 // Reset form
                 setFormData({

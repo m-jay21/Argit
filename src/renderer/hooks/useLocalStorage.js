@@ -167,13 +167,14 @@ export function useLocalStorage() {
 
   // Helper functions for updating specific parts of data
   const updateTransactions = async (transactions) => {
-    const newData = { ...data, transactions };
-    const result = await saveData(newData);
-    return result;
+    const freshData = await getFreshData();
+    const newData = { ...freshData, transactions };
+    return saveData(newData);
   };
 
-  const updateSubscriptions = (subscriptions) => {
-    const newData = { ...data, subscriptions };
+  const updateSubscriptions = async (subscriptions) => {
+    const freshData = await getFreshData();
+    const newData = { ...freshData, subscriptions };
     return saveData(newData);
   };
 
@@ -183,8 +184,9 @@ export function useLocalStorage() {
     return saveData(newData);
   };
 
-  const updateBudgetConfig = (budgetConfig) => {
-    const newData = { ...data, budgetConfig };
+  const updateBudgetConfig = async (budgetConfig) => {
+    const freshData = await getFreshData();
+    const newData = { ...freshData, budgetConfig };
     return saveData(newData);
   };
 
@@ -205,6 +207,17 @@ export function useLocalStorage() {
     return saveData(newData);
   };
 
+  /** Single save: prepend a transaction and merge settings (From/To Savings). */
+  const persistWithNewTransactionAndSettings = async (transaction, partialSettings) => {
+    const freshData = await getFreshData();
+    const newData = {
+      ...freshData,
+      transactions: [transaction, ...(freshData.transactions || [])],
+      settings: { ...freshData.settings, ...partialSettings }
+    };
+    return saveData(newData);
+  };
+
   return {
     data,
     isLoading,
@@ -215,6 +228,7 @@ export function useLocalStorage() {
     updateSettings,
     updateBudgetConfig,
     updateSavingsGoals,
-    persistWithEmptyTransactions
+    persistWithEmptyTransactions,
+    persistWithNewTransactionAndSettings
   };
 }
